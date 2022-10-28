@@ -1,0 +1,42 @@
+version: '3.2'
+services:
+  webdav:
+    image: bytemark/webdav
+    restart: always
+    ports:
+        - "7120:80"
+    environment:
+      AUTH_TYPE: Basic
+      USERNAME: admin
+      PASSWORD: admin
+    volumes:
+    - webdav:/docker/webdav
+
+  unexe-broker:
+    image: gaztastic/unexe-lotus-broker
+    ports:
+    - 7101:8101
+    restart: unless-stopped
+    env_file:
+    - 'env.env'
+    volumes:
+    - unexe-broker:/docker/aqua3s-broker
+
+  unexe-visualiser:
+    image: gaztastic/unexe-lotus-vis
+    ports:
+      - 7100:8100
+    restart: unless-stopped
+    env_file:
+       - 'env.env'
+    depends_on:
+      - unexe-broker
+      - webdav
+    volumes:
+      - unexe-visualiser:/docker/aqua3s-visualiser
+
+  
+volumes:
+  unexe-broker:
+  webdav:
+  unexe-visualiser:
