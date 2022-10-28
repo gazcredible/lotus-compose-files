@@ -1,0 +1,169 @@
+  Page 1                                    Fri Oct 28 13:43:51 2022
+
+  ******************************************************************
+  *                           E P A N E T                          *
+  *                   Hydraulic and Water Quality                  *
+  *                   Analysis for Pipe Networks                   *
+  *                         Version 2.2                            *
+  ******************************************************************
+  
+  Analysis begun Fri Oct 28 13:43:51 2022
+... local_data/TS network.inp
+      Number of Junctions................ 60
+      Number of Reservoirs............... 13
+      Number of Tanks ................... 0
+      Number of Pipes ................... 72
+      Number of Pumps ................... 0
+      Number of Valves .................. 2
+      Headloss Formula .................. Darcy-Weisbach
+      Nodal Demand Model ................ DDA
+      Hydraulic Timestep ................ 15.00 min
+      Hydraulic Accuracy ................ 0.001000
+      Status Check Frequency ............ 2
+      Maximum Trials Checked ............ 10
+      Damping Limit Threshold ........... 0.000000
+      Maximum Trials .................... 200
+      Quality Analysis .................. None
+      Specific Gravity .................. 1.00
+      Relative Kinematic Viscosity ...... 1.00
+      Relative Chemical Diffusivity ..... 1.00
+      Demand Multiplier ................. 1.00
+      Total Duration .................... 10080.00 min
+      Reporting Criteria:
+         No Nodes
+         No Links
+   
+  Analysis begun Fri Oct 28 13:43:51 2022
+
+  WARNING: Negative pressures at 0:00:00 hrs.
+   
+  WARNING: Negative pressures at 1:00:00 hrs.
+   
+  WARNING: Negative pressures at 2:00:00 hrs.
+   
+  WARNING: Negative pressures at 3:00:00 hrs.
+   
+  WARNING: Negative pressures at 4:00:00 hrs.
+   
+  WARNING: Negative pressures at 5:00:00 hrs.
+   
+  WARNING: Negative pressures at 6:00:00 hrs.
+   
+  WARNING: Negative pressures at 7:00:00 hrs.
+   
+  WARNING: Negative pressures at 8:00:00 hrs.
+   
+  WARNING: Negative pressures at 9:00:00 hrs.
+   
+  WARNING: Negative pressures at 10:00:00 hrs.
+   
+  WARNING: Negative pressures at 11:00:00 hrs.
+   
+  WARNING: Negative pressures at 12:00:00 hrs.
+   
+  WARNING: Negative pressures at 13:00:00 hrs.
+   
+  WARNING: Negative pressures at 14:00:00 hrs.
+   
+  WARNING: Negative pressures at 15:00:00 hrs.
+   
+  WARNING: Negative pressures at 16:00:00 hrs.
+   
+  WARNING: Negative pressures at 17:00:00 hrs.
+   
+  WARNING: Negative pressures at 18:00:00 hrs.
+   
+  WARNING: Negative pressures at 19:00:00 hrs.
+   
+  WARNING: Negative pressures at 20:00:00 hrs.
+   
+  WARNING: Negative pressures at 21:00:00 hrs.
+   
+  WARNING: Negative pressures at 22:00:00 hrs.
+   
+  WARNING: Negative pressures at 23:00:00 hrs.
+   
+  WARNING: Negative pressures at 24:00:00 hrs.
+   
+  WARNING: Negative pressures at 25:00:00 hrs.
+   
+  WARNING: Negative pressures at 26:00:00 hrs.
+   
+  WARNING: Negative pressures at 27:00:00 hrs.
+   
+  WARNING: Negative pressures at 28:00:00 hrs.
+   
+  WARNING: Negative pressures at 29:00:00 hrs.
+   
+  WARNING: Negative pressures at 30:00:00 hrs.
+   
+  WARNING: Negative pressures at 31:00:00 hrs.
+   
+  WARNING: Negative pressures at 32:00:00 hrs.
+   
+  WARNING: Negative pressures at 33:00:00 hrs.
+   
+  WARNING: Negative pressures at 34:00:00 hrs.
+   
+  WARNING: Negative pressures at 35:00:00 hrs.
+   
+  WARNING: Negative pressures at 36:00:00 hrs.
+   
+  WARNING: Negative pressures at 37:00:00 hrs.
+   
+  WARNING: Negative pressures at 38:00:00 hrs.
+   
+  WARNING: Negative pressures at 39:00:00 hrs.
+   
+  WARNING: Negative pressures at 40:00:00 hrs.
+   
+  WARNING: Negative pressures at 41:00:00 hrs.
+   
+  WARNING: Negative pressures at 42:00:00 hrs.
+   
+  WARNING: Negative pressures at 43:00:00 hrs.
+   
+  WARNING: Negative pressures at 44:00:00 hrs.
+   
+  WARNING: Negative pressures at 45:00:00 hrs.
+   
+  WARNING: Negative pressures at 46:00:00 hrs.
+   
+  WARNING: Negative pressures at 47:00:00 hrs.
+   
+  WARNING: Negative pressures at 48:00:00 hrs.
+   
+  WARNING: Negative pressures at 49:00:00 hrs.
+   
+  WARNING: Negative pressures at 50:00:00 hrs.
+   
+  WARNING: Negative pressures at 51:00:00 hrs.
+   
+  WARNING: Negative pressures at 52:00:00 hrs.
+   
+  WARNING: Negative pressures at 53:00:00 hrs.
+   
+  WARNING: Negative pressures at 54:00:00 hrs.
+   
+  WARNING: Negative pressures at 55:00:00 hrs.
+   
+  WARNING: Negative pressures at 56:00:00 hrs.
+   
+  WARNING: Negative pressures at 57:00:00 hrs.
+   
+  WARNING: Negative pressures at 58:00:00 hrs.
+   
+  WARNING: Negative pressures at 59:00:00 hrs.
+   
+  WARNING: Negative pressures at 67:00:00 hrs.
+   
+  WARNING: Negative pressures at 68:00:00 hrs.
+   
+  WARNING: Negative pressures at 69:00:00 hrs.
+   
+  WARNING: Negative pressures at 70:00:00 hrs.
+   
+  WARNING: Negative pressures at 71:00:00 hrs.
+   
+  WARNING: Negative pressures at 72:00:00 hrs.
+   
