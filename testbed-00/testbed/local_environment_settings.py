@@ -7,11 +7,34 @@ if 'DEVICE_BROKER' not in os.environ:
 
     target_enviroment = 'windows.box'
     target_enviroment = 'local.docker'
+    target_enviroment = 'local.bench'
 
     my_broker = ''
 
     os.environ['FILE_VISUALISER_FOLDER'] = 'visualis3r'
     os.environ['PILOTS'] = 'AAA,GUW'
+
+    if target_enviroment == 'local.bench':
+        #this is my local daocker install on localhost
+        ip = 'http://0.0.0.0'
+
+        os.environ['DEVICE_BROKER'] = ip +':7111'
+        os.environ['VISUALISER'] = ip + ':7110'
+
+        os.environ['WEBDAV_URL'] = ip + ':7130'
+        os.environ['WEBDAV_NAME'] = 'admin'
+        os.environ['WEBDAV_PASS'] = 'admin'
+
+        os.environ['REMOTE_LOGGING_URL'] = ''
+        os.environ['REMOTE_LOGGING_ENABLED'] = 'False'
+
+        path = '/docker/lotus-visualiser-local-bench/'
+
+        if platform.system().lower() == 'windows':
+            os.environ['FILE_PATH'] = 'c:' + path
+        else:
+            os.environ['FILE_PATH'] = path
+
 
     if target_enviroment == 'local.docker':
         #this is my local daocker install on localhost

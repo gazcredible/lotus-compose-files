@@ -366,7 +366,7 @@ class IMM_model:
                 newDRscore = newDRscore + 5
 
         PIs['PI3'] = self.baseDemand_m3 - (leakDemand_m3 - leakvolume)
-        if PIs['PI3'] < 0: #this occurs when pressure increases compared to original sim due to PRV operation.
+        if PIs['PI3'] < 0: #this occurs when pressure increases compared to original unexe_epanet due to PRV operation.
             PIs['PI3'] = 0
         PIs['PI4'] = newDRscore - self.baseDRscore
         if self.PI_results['default_repair']['PI1'] <= 0:
@@ -519,7 +519,7 @@ class IMM_model:
                 newDRscore = newDRscore + 5
 
         PIs['PI3'] = self.baseDemand_m3 - (leakDemand_m3 - leakvolume)
-        if PIs['PI3'] < 0: #this occurs when pressure increases compared to original sim due to PRV operation.
+        if PIs['PI3'] < 0: #this occurs when pressure increases compared to original unexe_epanet due to PRV operation.
             PIs['PI3'] = 0
         PIs['PI4'] = newDRscore - self.baseDRscore
 

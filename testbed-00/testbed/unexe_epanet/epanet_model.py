@@ -1,4 +1,4 @@
-#GARETH - this is going to hold everythng for working with epanet-based networks
+#GARETH - this is going to hold everythng for working with unexe_epanet-based networks
 # 1. define sensors for node/link data
 # 2. do simulation time-steps to update fiware
 # 3. create anomaly data, as it's useful for visualising network operations
@@ -15,8 +15,7 @@ import datetime
 import matplotlib.pyplot as plt
 import pandas
 import epanet.toolkit as en
-
-import sim.epanet_model
+import pyproj
 
 
 class epanet_model:
@@ -25,9 +24,69 @@ class epanet_model:
         self.inp_file = None
         self.epanetmodel = None
 
+        #this is for managing the time of simualtions
+        self.elapsed_time_in_sec = 0
+        self.start_datetime = datetime.datetime.now()
+        self.current_datetime = self.start_datetime
+
+        #this is for visualising models
+        self.flip_coordinates = False
+        self.coord_system = pyproj.CRS.from_epsg(4326)
+        self.transformer = pyproj.Transformer.from_crs(self.coord_system, pyproj.CRS.from_epsg(4326))
+
     def init(self,inp_file:str):
         self.inp_file = inp_file
         self.load_file(self.inp_file)
+
+    def get_sim_time(self):
+        return self.elapsed_time_in_sec
+
+    def elapsed_datetime(self):
+        return self.start_datetime + datetime.timedelta(seconds=self.get_sim_time() )
+
+    def set_datetime(self, start_datetime:datetime.datetime=None):
+        try:
+            if start_datetime == None:
+                self.start_datetime = datetime.datetime.now()
+            else:
+                self.start_datetime = start_datetime
+
+            self.current_datetime = self.start_datetime
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(),e)
+
+    def reset(self, start_datetime:datetime.datetime=None):
+        try:
+            if self.epanetmodel is not None:
+                timestep = self.get_hyd_step()
+                self.load_file(self.inp_file)
+                self.set_hyd_step(timestep)
+            else:
+                self.load_file(self.inp_file)
+
+            if self.epanetmodel is not None:
+                en.openH(self.epanetmodel.proj_for_simulation)
+                en.initH(self.epanetmodel.proj_for_simulation, en.NOSAVE)
+
+            self.elapsed_time_in_sec = 0
+            self.set_datetime(start_datetime)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
+
+    def step(self):
+        try:
+            if self.epanetmodel is not None:
+                en.runH(self.epanetmodel.proj_for_simulation)
+                t = en.nextH(self.epanetmodel.proj_for_simulation)
+                self.elapsed_time_in_sec += t
+
+                if True:
+                    dur = en.gettimeparam(self.epanetmodel.proj_for_simulation, en.DURATION)
+                    en.settimeparam(self.epanetmodel.proj_for_simulation, en.DURATION, dur + t)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
 
     def load_file(self,inp_file):
         try:

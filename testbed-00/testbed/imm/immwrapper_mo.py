@@ -33,8 +33,8 @@ class IMM_Wrapper():
             leakPipeID = ''
 
             if True: #LOTUS
-                # collect epanet model from contextbroker - could rewrite this hardcoded?
-                inp_file = os.environ['FILE_PATH'] + 'visualiser/data/' + fiware_service + '/waternetwork/epanet-test.inp'
+                # collect unexe_epanet model from contextbroker - could rewrite this hardcoded?
+                inp_file = os.environ['FILE_PATH'] + 'visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet-test.inp'
                 leakPipeID = 'GP324'
                 self.closed_pipe_ids = ['GP110']  # this should be scripted to determine which pipes are closed (within IMM_PI.py file)
                 self.prv_pipe_ids = ['1']
@@ -42,7 +42,7 @@ class IMM_Wrapper():
             else:
                 #force for aqua3s/AAA demo
                 fiware_service = 'AAA'
-                inp_file = '/docker/aqua3s-p3/' + 'aqua3s-visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+                inp_file = '/docker/aqua3s-p3/' + 'aqua3s-visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
                 leakPipeID = '14'
 
@@ -51,7 +51,7 @@ class IMM_Wrapper():
             IMM.load_epanetmodel()
 
             if IMM.epanetmodel == None:
-                self.logger.fail(inspect.currentframe(),'Failed to load epanet model:' + inp_file)
+                self.logger.fail(inspect.currentframe(),'Failed to load unexe_epanet model:' + inp_file)
                 return
 
             # Get Leak Node

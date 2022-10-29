@@ -11,7 +11,7 @@ import json
 import epanet_fiware.epanetmodel
 import epanet_fiware.enumerations as enu
 import epanet.toolkit as en
-import sim.epanet_model
+import epanet.epanet_model
 import matplotlib.pyplot as plt
 
 
@@ -22,7 +22,7 @@ class SimInstance():
 
     def init(self, inp_file: str):
 
-        self.epanetmodel = epanet_fiware.epanetmodel.EPAnetModel('sim network', inp_file)
+        self.epanetmodel = epanet_fiware.epanetmodel.EPAnetModel('unexe_epanet network', inp_file)
 
         self.run_step = True
         self.elapsed_time_in_sec = 0
@@ -39,12 +39,12 @@ class SimInstance():
         en.initH(self.epanetmodel.proj_for_simulation, en.NOSAVE)
 
         """
-            get initial data for sim
+            get initial data for unexe_epanet
                 get the 'current' time (whereever that may be) and work out where the sim_time should start for the initial go
                     that means, take the current time and work out what the time was for sun-00:00
 
                 while sim_time < current time
-                    iterate through sim backlog                    
+                    iterate through unexe_epanet backlog                    
         """
         self.elapsed_time_in_sec = 0
         self.sim_step_in_minutes = 60 * 1
@@ -89,7 +89,7 @@ class SimInstance():
         sim_time = sim_start_time.strftime("%A-%H:%M")
 
         while sim_start_time < rounded_time:
-            # do a sim step
+            # do a unexe_epanet step
             print('Doing catch-up: ' + str(sim_start_time.strftime("%A-%H:%M")))
 
             # add 15 min onto sim_start_time
@@ -156,7 +156,7 @@ class SimInstance():
         print('freewheel_process stopped')
 
 
-class EPASim(sim.epanet_model.epanet_model):
+class EPASim(epanet.epanet_model.epanet_model):
     def __init__(self):
         super().__init__()
 
@@ -274,7 +274,7 @@ class EPASim(sim.epanet_model.epanet_model):
 
     def freewheel_process(self, run_step: threading.Event):
 
-        epanetmodel = epanet_fiware.epanetmodel.EPAnetModel('sim network', self.inp_file)
+        epanetmodel = epanet_fiware.epanetmodel.EPAnetModel('unexe_epanet network', self.inp_file)
 
         stepDuration = 1 * 60
 
@@ -335,7 +335,7 @@ def testbed(fiware_service):
     epasim = EPASim()
 
     fiware_service = 'AAA'
-    inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'epanet.inp'
+    inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'unexe_epanet.inp'
     epasim.init(inp_file)
 
     while quitApp is False:
@@ -346,7 +346,7 @@ def testbed(fiware_service):
         print('1..Reset Sim')
         print('2..Run a step')
         print('2a..Graph steps')
-        print('3..Freewheel sim')
+        print('3..Freewheel unexe_epanet')
         print('X..Back')
         print('\n')
 

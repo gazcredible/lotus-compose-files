@@ -245,7 +245,7 @@ class AnomalyLocalization():
              leak_nodes = nodeIDs
         i=0
         for nodeID in leak_nodes:
-            print("node sim " + str(i) + " of "+ str(len(leak_nodes)))
+            print("node unexe_epanet " + str(i) + " of "+ str(len(leak_nodes)))
             i=i+1
             for repeat in range(repeats):
                 try:
@@ -317,7 +317,7 @@ class AnomalyLocalization():
         leaks = []
         i = 0
         for nodeID in nodeIDs:
-            print("node sim " + str(i) + " of " + str(len(nodeIDs)))
+            print("node unexe_epanet " + str(i) + " of " + str(len(nodeIDs)))
             i = i + 1
             for repeat in range(repeats):
                 try:
@@ -560,7 +560,7 @@ class AnomalyLocalization():
 # # test.simulationData['train_leaks'].to_pickle(path+"GT_train_leaks_2")
 # # #test.simulationData['test_leaks'].to_pickle(path+"GT_test_leaks")
 # #%%
-# #load sim data
+# #load unexe_epanet data
 # path = "C:/Users/bs524/OneDrive - University of Exeter/Documents/Exeter/dev/packages/anomaly-detection/data/"
 # test.simulationData['train_noleak'] = pd.read_pickle(path+"GT_train_noleak")
 # test.simulationData['train_leaks'] = pd.read_pickle(path+"GT_train_leaks")

@@ -11,7 +11,7 @@ import os
 import pyproj
 
 import anomalies.Anomaly_Localization_Class as AL
-import sim.epanet_model
+import epanet.epanet_model
 import datetime
 
 import geopandas
@@ -30,7 +30,7 @@ import matplotlib.pyplot as plt
 
 """
 steps:
-1. create AnomalyLocalization object with epanet model, and list of sensors
+1. create AnomalyLocalization object with unexe_epanet model, and list of sensors
 2. build datasets()
 3. save data
 """
@@ -160,7 +160,7 @@ class AnomalyLocalisation(AL.AnomalyLocalization):
              leak_nodes = nodeIDs
         i=0
         for nodeID in leak_nodes:
-            print("node sim " + str(i) + " of "+ str(len(leak_nodes)))
+            print("node unexe_epanet " + str(i) + " of "+ str(len(leak_nodes)))
             i=i+1
             for repeat in range(repeats):
                 try:
@@ -258,10 +258,10 @@ class AnomalyLocalisation(AL.AnomalyLocalization):
 
 def anomaly_localisation_testbed(fiware_service):
     try:
-        inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+        inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
         #load inp file into EPASim so we can get the sensors out of it
-        water_model = sim.epanet_model.epanet_model()
+        water_model = epanet.epanet_model.epanet_model()
 
         coord_str = ''
 
@@ -379,7 +379,7 @@ def testbed(fiware_service):
         if key == '2':
             try:
                 coord_str = 'epsg:32632'
-                inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+                inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
                 sensors = []
                 leakNodeIDs = []
@@ -469,7 +469,7 @@ def testbed(fiware_service):
                 logger.exception(inspect.currentframe(), e)
 
         if key == '3':
-            inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+            inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
             sensors = []
             coord_str = 'epsg:32632'
 

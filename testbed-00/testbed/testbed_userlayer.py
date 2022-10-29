@@ -112,7 +112,7 @@ def testbed(fiware_wrapper, fiware_service):
         print('5..View webdav resources')
         print('6..Copy userlayers to service file store')
 
-        print('99..Set-up webdav with epanet')
+        print('99..Set-up webdav with unexe_epanet')
 
         print('X..Back')
         print('\n')
@@ -181,11 +181,11 @@ def testbed(fiware_wrapper, fiware_service):
             dav = unexeaqua3s.webdav.webdav(options)
 
             if dav.is_remote_available():
-                dav.copy_to_dav('local_data/KMKHYA_GHY_WDN.inp', 'data/GUW/epanet/KMKHYA_GHY_WDN.inp')
-                dav.copy_to_dav('local_data/KMKHYA_GHY_WDN.inp', 'data/GUW/waternetwork/epanet.inp')
+                dav.copy_to_dav('local_data/KMKHYA_GHY_WDN.inp', 'data/GUW/unexe_epanet/KMKHYA_GHY_WDN.inp')
+                dav.copy_to_dav('local_data/KMKHYA_GHY_WDN.inp', 'data/GUW/waternetwork/unexe_epanet.inp')
 
-                dav.copy_to_dav('local_data/TS network.inp', 'data/AAA/epanet/TS network.inp')
-                dav.copy_to_dav('local_data/TS network.inp', 'data/AAA/waternetwork/epanet.inp')
+                dav.copy_to_dav('local_data/TS network.inp', 'data/AAA/unexe_epanet/TS network.inp')
+                dav.copy_to_dav('local_data/TS network.inp', 'data/AAA/waternetwork/unexe_epanet.inp')
 
 
 

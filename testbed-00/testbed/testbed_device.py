@@ -9,8 +9,8 @@ import datetime
 import math
 import random
 
-import sim.epanet_model
-import sim.epasim_fiware
+import unexe_epanet.epanet_model
+import unexe_epanet.epanet_fiware
 
 raw_device_info = [
     # 3-lotus, 4-pressure,5-flow
@@ -325,9 +325,9 @@ class EPANETDeviceBuilder:
 def create_fiware_AAA():
     fiware_service = 'AAA'
 
-    epasim_fiware_model = sim.epasim_fiware.epasim_fiware()
+    epasim_fiware_model = unexe_epanet.epasim_fiware.epasim_fiware()
 
-    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
     coord_system = pyproj.CRS.from_epsg(32632)
 
@@ -344,9 +344,9 @@ sim_lookup = {}
 
 
 def load_sim_data(fiware_service):
-    epasim_fiware_model = sim.epasim_fiware.epasim_fiware()
+    epasim_fiware_model = unexe_epanet.epasim_fiware.epasim_fiware()
 
-    inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'epanet.inp'
+    inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'unexe_epanet.inp'
 
     coord_system = pyproj.CRS.from_epsg(32632)
 
@@ -382,7 +382,7 @@ def testbed(fiware_service):
         print('4..Update Visualiser: ' + os.environ['VISUALISER'])
 
         print('5..Load anomaly data')
-        print('55..Create Smart Devices from epanet')
+        print('55..Create Smart Devices from unexe_epanet')
 
         print('6..Update pilot: ' + fiware_service)
 
@@ -408,9 +408,9 @@ def testbed(fiware_service):
             if False:
                 if fiware_service == 'GUW':
 
-                    epanet_model = sim.epanet_model.epanet_model()
+                    epanet_model = unexe_epanet.epanet_model.epanet_model()
 
-                    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+                    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
                     coord_system = pyproj.CRS.from_epsg(32646)
 
@@ -446,8 +446,8 @@ def testbed(fiware_service):
                     # create initial data
                     fiware_time = unexefiware.time.datetime_to_fiware(start)
 
-                    # load epanet model & convert to wgs84
-                    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/epanet.inp'
+                    # load unexe_epanet model & convert to wgs84
+                    inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
 
                     coord_system = pyproj.CRS.from_epsg(32646)
                     flip_coordindates = True
@@ -561,12 +561,12 @@ def testbed(fiware_service):
         if key == '55':
 
             # do GUW
-            epanet_model = sim.epanet_model.epanet_model()
+            epanet_model = unexe_epanet.epanet_model.epanet_model()
 
             service = 'GUW'
             support.delete_type_from_broker(os.environ['DEVICE_BROKER'], fiware_service, ['Device'])
 
-            inp_file = '/docker/lotus-visualiser/visualiser/data/' + service + '/waternetwork/epanet.inp'
+            inp_file = '/docker/lotus-visualiser/visualiser/data/' + service + '/waternetwork/unexe_epanet.inp'
 
             coord_system = pyproj.CRS.from_epsg(32646)
 

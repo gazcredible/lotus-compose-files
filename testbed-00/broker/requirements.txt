@@ -1,0 +1,14 @@
+Flask
+Flask-Table
+flask-compress
+flask-cors
+waitress
+requests
+requests_oauthlib
+oauthlib
+jenkspy
+orjson
+
+./packages/unexefiware-f4w.0.0.3-py3-none-any.whl
+
+waitress

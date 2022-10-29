@@ -10,7 +10,7 @@ import unexefiware.time
 import unexeaqua3s.webdav
 
 import imm.immwrapper_mo
-import sim.epasim
+import unexe_epanet.epasim
 import anomalies.testbed
 import testbed_lotus
 
@@ -61,7 +61,7 @@ def testbed():
             imm.immwrapper_mo.testbed(fiware_service)
 
         if key == '22':
-            sim.epasim.testbed(fiware_service)
+            unexe_epanet.epasim.testbed(fiware_service)
 
         if key == '33':
             anomalies.testbed.testbed(fiware_service)
