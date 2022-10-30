@@ -66,5 +66,31 @@ class unexewrapper(unexefiware.fiwarewrapper.fiwareWrapper):
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
+    def get_temporal(self, fiware_service:str, entity_id:str, properties:list, start_date:str, end_date:str):
+        session = requests.session()
+        try:
+            headers = {}
+            headers['Link'] = self.link
+            headers['fiware_service'] = fiware_service
 
+            attributes = ''
 
+            for request_property in properties:
+                attributes += request_property
+
+                if request_property is not properties[len(properties) - 1]:
+                    attributes += ','
+
+            params = {}
+            params['timerel'] = 'between'
+            params['time'] = start_date
+            params['endTime'] = end_date
+            params['attrs'] = attributes
+            #params['options'] = 'temporalValues'
+
+            r = session.get(self.url + '/ngsi-ld/v1/temporal/entities/' + entity_id, params=params, headers=headers, timeout=unexefiware.ngsildv1.default_timeout)
+
+            return unexefiware.ngsildv1.return_response(r)
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(),e)
+            return [-1, str(e)]

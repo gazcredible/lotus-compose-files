@@ -6,6 +6,7 @@ import inspect
 import matplotlib.collections
 import unexefiware.base_logger
 import unexefiware.fiwarewrapper
+import unexefiware.time
 import unexeaqua3s.resourcebuilder
 import support
 import datetime
@@ -353,7 +354,7 @@ def chart_links(sim:unexe_epanet.epanet_fiware, fiware_wrapper:unexefiware, logg
             except Exception as e:
                 logger.exception(inspect.currentframe(), e)
 
-def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.base_logger.BaseLogger):
+def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.base_logger.BaseLogger, current_datetime_fiware:str):
     quitApp = False
 
     while quitApp is False:
@@ -362,6 +363,7 @@ def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefi
 
         print('\n')
         print('1..Current Devices')
+        print('2..Historic Devices')
         print('X..Back')
         print('\n')
 
@@ -378,7 +380,18 @@ def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefi
                 for entity in result[1]:
                     print(entity['id'])
 
-        print()
+            print()
+
+        if key == '2':
+            print('Historic Devices')
+
+            start_date = '1900-01-01T00:00:00Z'
+
+            result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:BP600.1500.BP2600.15.1', ['flow'], start_date,current_datetime_fiware)
+
+            if result[0] == 200:
+                print(result[1])
+
 
 
 def testbed_sim_management(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger):
@@ -514,7 +527,7 @@ def testbed_sim_management(fiware_wrapper:unexewrapper, fiware_service:str, logg
             plt.show()
 
         if key == '9':
-            testbed_fiware( fiware_wrapper, fiware_service, logger)
+            testbed_fiware(fiware_wrapper, fiware_service, logger, unexefiware.time.datetime_to_fiware(sim_inst.elapsed_datetime()) )
 
 if __name__ == '__main__':
     #testbed()
