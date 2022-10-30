@@ -12,6 +12,7 @@ if 'FILE_PATH' not in os.environ:
     else:
         os.environ['FILE_PATH'] = path
 
+    os.environ['FILE_PATH'] = './'
 
 from flask import Flask
 from waitress import serve
