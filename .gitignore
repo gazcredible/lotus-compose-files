@@ -36,3 +36,7 @@ testbed-00/broker/.idea/
 testbed-00/broker/unexebroker/__pycache__/
 
 testbed-00/testbed/unexe_epanet/__pycache__/
+testbed-00/broker/broker.sqlite3
+testbed-00/broker/broker.sqlite3
+testbed-00/broker/broker.sqlite3
+testbed-00/testbed/temp.rpt

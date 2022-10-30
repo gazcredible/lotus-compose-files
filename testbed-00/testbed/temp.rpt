@@ -1,4 +1,4 @@
-  Page 1                                    Sun Oct 30 11:09:59 2022
+  Page 1                                    Sun Oct 30 13:10:03 2022
 
   ******************************************************************
   *                           E P A N E T                          *
@@ -8,7 +8,7 @@
   ******************************************************************
   
    
-      Input Data File ................... local_data/TS network.inp
+      Input Data File ................... local_data\TS network.inp
       Number of Junctions................ 60
       Number of Reservoirs............... 13
       Number of Tanks ................... 0
@@ -33,14 +33,6 @@
          No Nodes
          No Links
    
-  Analysis begun Sun Oct 30 11:09:59 2022
+  Analysis begun Sun Oct 30 13:10:03 2022
 
-  WARNING: Negative pressures at 0:00:00 hrs.
-   
-  WARNING: Negative pressures at 1:00:00 hrs.
-   
-  WARNING: Negative pressures at 2:00:00 hrs.
-   
-  WARNING: Negative pressures at 3:00:00 hrs.
-   
-  Analysis ended Sun Oct 30 11:10:34 2022
+  Analysis ended Sun Oct 30 13:10:03 2022

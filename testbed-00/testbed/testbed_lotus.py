@@ -385,7 +385,7 @@ def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefi
         if key == '2':
             print('Historic Devices')
 
-            start_date = '1900-01-01T00:00:00Z'
+            start_date = '1971-01-01T00:00:00Z'
 
             result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:BP600.1500.BP2600.15.1', ['flow'], start_date,current_datetime_fiware)
 
