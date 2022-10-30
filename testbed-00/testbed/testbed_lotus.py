@@ -1,7 +1,9 @@
+from textwrap import indent
 import local_environment_settings
 import os
 
 import inspect
+import json
 
 import matplotlib.collections
 import unexefiware.base_logger
@@ -18,10 +20,6 @@ import unexewrapper
 import epanet.toolkit as en
 import matplotlib.pyplot as plt
 import numpy as np
-
-#GARETH replace with env.var
-pilot_list = ['AAA','GUW']
-
 
 
 class epanet_localdata(unexe_epanet.epanet_model.epanet_model):
@@ -139,39 +137,6 @@ def load_epanet_model(fiware_service):
     return sim_model
 
 sim_lookup = {}
-
-
-def testbed_device(fiware_wrapper:unexefiware.fiwarewrapper.fiwareWrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger):
-    quitApp = False
-
-
-
-    while quitApp is False:
-        print('\n')
-        print('DEVICE_BROKER: ' + os.environ['DEVICE_BROKER'] + ' ' + fiware_service)
-
-        print('\n')
-        print('1..View Devices')
-        print('2..Create from EPANET')
-
-        print('X..Back')
-        print('\n')
-
-        key = input('>')
-
-        if key == '1':
-            deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo(fiware_service, device_wrapper=fiware_wrapper)
-            deviceInfo.run()
-
-            support.print_devices(deviceInfo)
-
-        if key == '2':
-            sensors = sim_lookup[fiware_service].get_sensors()
-            fiware_time = unexefiware.time.datetime_to_fiware(datetime.datetime.now())
-            sim_lookup[fiware_service].create_entities(fiware_wrapper, fiware_service, fiware_time, sensors)
-
-        if key == 'x':
-            quitApp = True
 
 def MIN_TO_SEC(x):
     return x*60
@@ -390,7 +355,7 @@ def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefi
             result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:BP600.1500.BP2600.15.1', ['flow'], start_date,current_datetime_fiware)
 
             if result[0] == 200:
-                print(result[1])
+                print(json.dumps(result[1], indent=3))
 
 
 

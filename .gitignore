@@ -40,3 +40,7 @@ testbed-00/broker/broker.sqlite3
 testbed-00/broker/broker.sqlite3
 testbed-00/broker/broker.sqlite3
 testbed-00/testbed/temp.rpt
+
+testbed-00/broker/venv/
+
+testbed-00/testbed/.vscode/
