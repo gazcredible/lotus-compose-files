@@ -44,3 +44,5 @@ testbed-00/testbed/temp.rpt
 testbed-00/broker/venv/
 
 testbed-00/testbed/.vscode/
+
+*.rpt

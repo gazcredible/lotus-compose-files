@@ -55,7 +55,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                             if epanet_reference['epanet_type'] == 'node':
                                 self.update_node(fiware_wrapper, fiware_service, sim_fiware_time, device)
 
-                            if epanet_reference['epanet_type'] == 'pipe':
+                            if epanet_reference['epanet_type'] == 'link':
                                 self.update_link(fiware_wrapper, fiware_service, sim_fiware_time, device)
             else:
                 print('not time yet')
@@ -105,7 +105,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
                 value = self.getlinkvalue(index, en.FLOW)
 
-                self.add_entity(fiware_wrapper, fiware_service, urn, epanet_id, 'pipe',coords, epanet_id, 'flow', value, 'G51', fiware_time)
+                self.add_entity(fiware_wrapper, fiware_service, urn, epanet_id, 'link',coords, epanet_id, 'flow', value, 'G51', fiware_time)
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
@@ -154,7 +154,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         #GARETH short_name = name + '-' + epanet_type
         short_name = name #+ '-' + epanet_type
         device_record = self.create_device_model(device_index=self.device_index, sensor_name=short_name, name=name, property=prop_type, location=coords, unitcode=unitcode, fiware_time=fiware_time,value=value)
-        device_record['id'] = self.get_deviceid_from_definition(short_name)
+        device_record['id'] = self.get_deviceid_from_definition(prop_type.upper() +':' + short_name)
         device_record['location']['value']['coordinates'] = [round(coords[0],5),round(coords[1],5)]
         device_record['epanet_reference']['value'] = json.dumps({'urn': urn, 'epanet_id': epanet_id, 'epanet_type': epanet_type})
         fiware_wrapper.create_instance(entity_json=device_record, service=fiware_service, link=device_record['@context'])
@@ -310,7 +310,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 
-                    if epanet_reference['epanet_type'] == 'pipe':
+                    if epanet_reference['epanet_type'] == 'link':
                         try:
                             epanet_reference = json.loads(device['epanet_reference']['value'])
                             index = self.getlinkindex(epanet_reference['epanet_id'])
