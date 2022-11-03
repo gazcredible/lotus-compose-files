@@ -175,6 +175,7 @@ class ContextBroker:
                             self._add_entity(table_name, fiware_service, json_data[param], unexefiware.time.fiware_to_datetime(json_data[param]['observedAt']), db)
                             db.commit()
 
+                #self.logger.log(inspect.currentframe(), 'stream created ' + fiware_service + ' ' + json_data['id'])
                 return [201, '']
             except Exception as e:
                 if self.logger:

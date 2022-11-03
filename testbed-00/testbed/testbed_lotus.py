@@ -352,7 +352,11 @@ def testbed_fiware(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefi
 
             start_date = '1971-01-01T00:00:00Z'
 
-            result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:BP600.1500.BP2600.15.1', ['flow'], start_date,current_datetime_fiware)
+            result = []
+            if fiware_service == 'AAA':
+                result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:FLOW:BP600.1500.BP2600.15.1', ['flow'], start_date,current_datetime_fiware)
+            else:
+                result = fiware_wrapper.get_temporal(fiware_service, 'urn:ngsi-ld:Device:FLOW:GP1', ['flow'], start_date,current_datetime_fiware)
 
             if result[0] == 200:
                 print(json.dumps(result[1], indent=3))
@@ -501,6 +505,6 @@ if __name__ == '__main__':
     fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
     fiware_wrapper.init(logger=logger)
 
-    fiware_service = 'AAA'
+    fiware_service = 'GUW'
 
     testbed_sim_management(fiware_wrapper, fiware_service, logger)
