@@ -26,6 +26,7 @@ class epanet_model:
 
         #this is for managing the time of simualtions
         self.elapsed_time_in_sec = 0
+        self.next_time_step_in_sec = 0
         self.start_datetime = datetime.datetime.now()
         self.current_datetime = self.start_datetime
 
@@ -63,6 +64,7 @@ class epanet_model:
                 self.set_hyd_step(timestep)
             else:
                 self.load_file(self.inp_file)
+
 
             if self.epanetmodel is not None:
                 en.openH(self.epanetmodel.proj_for_simulation)

@@ -2,7 +2,6 @@ import local_environment_settings
 import os
 
 import testbed_userlayer
-import testbed_device
 import unexefiware.fiwarewrapper
 import unexefiware.fiwarewrapper_debug
 import unexefiware.base_logger

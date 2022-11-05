@@ -21,6 +21,19 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         self.fiware_service = ''
         self.value_dp = 3
 
+        self.link_property_lookups = {}
+        self.link_property_lookups['flow'] = {'label': en.FLOW, 'unitcode': 'G51'}
+        self.link_property_lookups['velocity'] = {'label': en.VELOCITY, 'unitcode':  'XXX'}
+        self.link_property_lookups['headloss'] = {'label': en.HEADLOSS, 'unitcode':  'XXX'}
+        self.link_property_lookups['quality'] = {'label': en.QUALITY, 'unitcode':  'XXX'}
+        self.link_property_lookups['status'] = {'label': en.STATUS, 'unitcode':  'XXX'}
+        self.link_property_lookups['setting'] = {'label':en.SETTING, 'unitcode':  'XXX'}
+
+        self.node_property_lookups = {}
+        self.node_property_lookups['head'] = {'label': en.HEAD, 'unitcode': 'XXX'}
+        self.node_property_lookups['pressure'] = {'label': en.PRESSURE, 'unitcode':  'N23'}
+        self.node_property_lookups['quality'] = {'label':  en.QUALITY, 'unitcode':  'XXX'}
+
     def init(self, epanet_file:str, coord_system:pyproj.CRS, fiware_service:str, flip_coordindates:bool=False):
 
         self.flip_coordinates = flip_coordindates
@@ -31,49 +44,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
         self.device_index = 1
 
-    def update_entities(self, fiware_wrapper:unexefiware.fiwarewrapper.fiwareWrapper, fiware_service:str, fiware_time:str):
-        """
-            get the current data from orion and see when the last update was
-        """
-
-        if self.elapsed_time_in_sec == 0:
-            print('no model!')
-        else:
-            if self.time_for_step(fiware_time):
-                while self.time_for_step(fiware_time):
-                    print('do a step')
-                    sim_fiware_time = self.do_a_step()
-
-                    devices = fiware_wrapper.get_entities('Device', fiware_service)
-
-                    if devices[0] == 200:
-                        for device in devices[1]:
-                            epanet_reference = json.loads(device['epanet_reference']['value'])
-
-                            print(str(device['id']) + ' ' + epanet_reference['epanet_id'] + ' ' + epanet_reference['epanet_type'])
-
-                            if epanet_reference['epanet_type'] == 'node':
-                                self.update_node(fiware_wrapper, fiware_service, sim_fiware_time, device)
-
-                            if epanet_reference['epanet_type'] == 'link':
-                                self.update_link(fiware_wrapper, fiware_service, sim_fiware_time, device)
-            else:
-                print('not time yet')
-
-    def create_entities(self, fiware_wrapper:unexefiware.fiwarewrapper.fiwareWrapper, fiware_service:str, fiware_time:str, sensor_list):
-        self.reset()
-        sim_fiware_time = self.step_to(fiware_time)
-
-        for sensor in sensor_list:
-            if 'Type' in sensor:
-                if sensor['Type'] == 'pressure':
-                    self.do_node(fiware_wrapper, fiware_service, sensor['ID'], sim_fiware_time)
-
-                if sensor['Type'] == 'flow':
-                    self.do_link(fiware_wrapper, fiware_service, sensor['ID'], sim_fiware_time)
-
     def do_link(self, fiware_wrapper, fiware_service, epanet_id, fiware_time):
-        urn = 'urn:ngsi-ld:Pipe:' + epanet_id
 
         try:
             index = self.getlinkindex(epanet_id)
@@ -103,71 +74,78 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                 if self.flip_coordinates:
                     coords = [coords[1], coords[0]]
 
-                value = self.getlinkvalue(index, en.FLOW)
+                device = self.create_device()
+                device['id'] = self.fiware_legal_name('urn:ngsi-ld:Device:' + epanet_id)
 
-                self.add_entity(fiware_wrapper, fiware_service, urn, epanet_id, 'link',coords, epanet_id, 'flow', value, 'G51', fiware_time)
+                for link_label in self.link_property_lookups:
+                    link_info = self.link_property_lookups[link_label]
+                    self.device_add_property(device, link_label, self.getlinkvalue(index, link_info['label']), link_info['unitcode'], fiware_time)
+
+                device['location']['value']['coordinates'] = [round(coords[0], 5), round(coords[1], 5)]
+                device['epanet_reference']['value'] = json.dumps({'urn': device['id'], 'epanet_id': epanet_id, 'epanet_type': 'link'})
+                fiware_wrapper.create_instance(entity_json=device, service=fiware_service, link=device['@context'])
+
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
     def do_node(self, fiware_wrapper, fiware_service, epanet_id, fiware_time):
-        urn = 'urn:ngsi-ld:Junction:' + epanet_id
 
-        index = self.getnodeindex(epanet_id)
-        coords = self.getcoord(index)
+        try:
+            index = self.getnodeindex(epanet_id)
+            coords = self.getcoord(index)
 
-        if coords and len(coords) == 2:
-            coords = list(coords)
+            if coords and len(coords) == 2:
+                coords = list(coords)
 
-            coords = self.transformer.transform(coords[0], coords[1])
+                coords = self.transformer.transform(coords[0], coords[1])
 
-            if self.flip_coordinates:
-                coords = [coords[1], coords[0]]
+                if self.flip_coordinates:
+                    coords = [coords[1], coords[0]]
 
-            value = self.getnodevalue(index, en.PRESSURE)
+                device = self.create_device()
+                device['id'] = self.fiware_legal_name('urn:ngsi-ld:Device:' + epanet_id)
 
-            self.add_entity(fiware_wrapper, fiware_service, urn, epanet_id, 'node', coords, epanet_id, 'pressure', value,'N23', fiware_time)
+                for node_label in self.node_property_lookups:
+                    node_info = self.node_property_lookups[node_label]
+                    self.device_add_property(device, node_label, self.getnodevalue(index, node_info['label']), node_info['unitcode'], fiware_time)
+
+                device['location']['value']['coordinates'] = [round(coords[0], 5), round(coords[1], 5)]
+                device['epanet_reference']['value'] = json.dumps({'urn': device['id'], 'epanet_id': epanet_id, 'epanet_type': 'node'})
+                fiware_wrapper.create_instance(entity_json=device, service=fiware_service, link=device['@context'])
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(),e)
+
+    def fiware_legal_name(self, name):
+        return name.replace(' ', '-')
+
+    def device_add_property(self, device, property_label, property_value, property_unitcode, fiware_time):
+
+        if isinstance(device['controlledProperty']['value'], str):
+            if len(device['controlledProperty']['value']) == 0:
+                device['controlledProperty']['value'] = property_label
+            else:
+                existing_prop = device['controlledProperty']['value']
+                device['controlledProperty']['value'] = []
+                device['controlledProperty']['value'].append(existing_prop)
+                device['controlledProperty']['value'].append(property_label)
         else:
-            print('coords error:' + urn)
+            device['controlledProperty']['value'].append(property_label)
 
-    def update_node(self, fiware_wrapper, fiware_service, fiware_time, device):
+        if property_label not in device:
+            device[property_label] = {}
 
-        epanet_reference = json.loads(device['epanet_reference']['value'])
-        index = self.getnodeindex(epanet_reference['epanet_id'])
+        device[property_label]['type'] = 'Property'
+        device[property_label]['value'] = str(round(property_value, self.value_dp))
+        device[property_label]['observedAt'] = fiware_time
+        device[property_label]['unitCode'] = property_unitcode
 
-        patch_data = copy.deepcopy(device['pressure'])
-        patch_data['observedAt'] = fiware_time
-        patch_data['value'] = self.getnodevalue(index, en.PRESSURE)
-
-        fiware_wrapper.patch_entity(device['id'],{'pressure':patch_data}, fiware_service)
-
-    def update_link(self, fiware_wrapper, fiware_service, fiware_time, device):
-        epanet_reference = json.loads(device['epanet_reference']['value'])
-        index = self.getlinkindex(epanet_reference['epanet_id'])
-
-        patch_data = copy.deepcopy(device['flow'])
-        patch_data['observedAt'] = fiware_time
-        patch_data['value'] = self.getnodevalue(index, en.FLOW)
-
-        fiware_wrapper.patch_entity(device['id'], {'flow': patch_data}, fiware_service)
-
-    def add_entity(self, fiware_wrapper, fiware_service, urn, epanet_id, epanet_type, coords, name, prop_type,value, unitcode, fiware_time):
-        #GARETH short_name = name + '-' + epanet_type
-        short_name = name #+ '-' + epanet_type
-        device_record = self.create_device_model(device_index=self.device_index, sensor_name=short_name, name=name, property=prop_type, location=coords, unitcode=unitcode, fiware_time=fiware_time,value=value)
-        device_record['id'] = self.get_deviceid_from_definition(prop_type.upper() +':' + short_name)
-        device_record['location']['value']['coordinates'] = [round(coords[0],5),round(coords[1],5)]
-        device_record['epanet_reference']['value'] = json.dumps({'urn': urn, 'epanet_id': epanet_id, 'epanet_type': epanet_type})
-        fiware_wrapper.create_instance(entity_json=device_record, service=fiware_service, link=device_record['@context'])
-
-        self.device_index += 1
-
-    def create_device(self, index):
+    def create_device(self):
         record = {}
 
         record['type'] = 'Device'
         record['@context'] = 'https://schema.lab.fiware.org/ld/context'
-        record['id'] = "urn:ngsi-ld:" + record['type'] + ':' + str(index)
-        record['id'] = record['id'].replace(' ', '-')
+        record['id'] = ''
 
         record['name'] = {}
         record['name']['type'] = 'Property'
@@ -187,7 +165,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         record['controlledProperty'] = {}
         record['controlledProperty']['type'] = 'Property'
 
-        record['controlledProperty']['value'] = 'TBD'
+        record['controlledProperty']['value'] = ''
 
         record['epanet_reference'] = {}
         record['epanet_reference']['type'] = 'Property'
@@ -195,66 +173,54 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
         return record
 
-    def create_property_status(self, fiware_time, property_name, value, unitCode):
-        record = {}
-
-        record[property_name] = {}
-        record[property_name]['type'] = 'Property'
-        record[property_name]['value'] = str(round(value, 2))
-        record[property_name]['observedAt'] = fiware_time
-        record[property_name]['unitCode'] = unitCode
-
-        return record
-
     def get_deviceid_from_definition(self, sensor_name):
         return ("urn:ngsi-ld:" + 'Device' + ':' + sensor_name).replace(' ', '-')
 
-    def generate_property_ngsildv1(self, baseline: dict, prop: str, fiware_time: str, value: float = 0):
-        record = {}
+    def reset(self, sensor_list:list=None, start_datetime:datetime.datetime=None):
 
-        record[prop] = {}
-        record[prop]['type'] = 'Property'
-        record[prop]['value'] = '##.##'
-        record[prop]['observedAt'] = fiware_time
-        record[prop]['unitCode'] = baseline['unitCode']
-
-        record[prop]['value'] = str(round(value, self.value_dp))
-
-        return record
-
-    def create_device_model(self, device_index, sensor_name, name, property, location, unitcode, fiware_time, value):
-
-        device_record = self.create_device(device_index)
-
-        device_record['name']['value'] = name
-        device_record['location']['value']['coordinates'] = [location[1], location[0]]
-        device_record['controlledProperty']['value'] = property
-
-        # gareth - hmmmm 0 is not a good starting value as it messes things up ;)
-
-        prop_staus = self.create_property_status(fiware_time, property, value, unitcode)
-        device_record[property] = prop_staus[property]
-
-        patch_data = self.generate_property_ngsildv1(device_record[property], property, fiware_time,value)
-
-        device_record[property] = patch_data[property]
-
-        return device_record
-
-    def reset(self, start_datetime:datetime.datetime=None):
+        print(str(self.get_hyd_step()))
         super().reset(start_datetime)
 
         self.delete()
 
-        if self.epanetmodel:
-            super().step()
+        try:
+            if self.epanetmodel:
+                if self.epanetmodel is not None:
 
-            self.post()
-            self.patch()
+                    self.elapsed_time_in_sec = self.next_time_step_in_sec
+
+                    en.runH(self.epanetmodel.proj_for_simulation)
+                    t = en.nextH(self.epanetmodel.proj_for_simulation)
+
+                    self.post(sensor_list)
+
+                    self.next_time_step_in_sec += t
+
+                    dur = en.gettimeparam(self.epanetmodel.proj_for_simulation, en.DURATION)
+                    en.settimeparam(self.epanetmodel.proj_for_simulation, en.DURATION, dur + t)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
 
     def step(self):
-        super().step()
-        self.patch()
+        try:
+            if self.epanetmodel:
+                if self.epanetmodel is not None:
+
+                    self.elapsed_time_in_sec = self.next_time_step_in_sec
+
+                    en.runH(self.epanetmodel.proj_for_simulation)
+                    t = en.nextH(self.epanetmodel.proj_for_simulation)
+
+                    self.patch()
+
+                    self.next_time_step_in_sec += t
+
+                    dur = en.gettimeparam(self.epanetmodel.proj_for_simulation, en.DURATION)
+                    en.settimeparam(self.epanetmodel.proj_for_simulation, en.DURATION, dur + t)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
 
     def delete(self):
         try:
@@ -265,13 +231,14 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
-    def post(self):
+    def post(self, sensor_list:list=None):
         try:
             #create FIWARE components for devices
             fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
             sim_fiware_time = unexefiware.time.datetime_to_fiware(self.elapsed_datetime())
 
-            sensor_list = self.get_sensors()
+            if sensor_list == None or len(sensor_list) == 0:
+                sensor_list = self.get_sensors()
 
             for sensor in sensor_list:
                 if 'Type' in sensor:
@@ -302,11 +269,14 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                             epanet_reference = json.loads(device['epanet_reference']['value'])
                             index = self.getnodeindex(epanet_reference['epanet_id'])
 
-                            patch_data = copy.deepcopy(device['pressure'])
-                            patch_data['observedAt'] = fiware_time
-                            patch_data['value'] = str(round(self.getnodevalue(index, en.PRESSURE),self.value_dp))
+                            for node_label in self.node_property_lookups:
+                                node_info = self.node_property_lookups[node_label]
 
-                            fiware_wrapper.patch_entity(device['id'], {'pressure': patch_data}, self.fiware_service)
+                                patch_data = copy.deepcopy(device[node_label])
+                                patch_data['observedAt'] = fiware_time
+                                patch_data['value'] = str(round(self.getnodevalue(index, node_info['label']),self.value_dp))
+
+                                fiware_wrapper.patch_entity(device['id'], {node_label: patch_data}, self.fiware_service)
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 
@@ -315,11 +285,14 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                             epanet_reference = json.loads(device['epanet_reference']['value'])
                             index = self.getlinkindex(epanet_reference['epanet_id'])
 
-                            patch_data = copy.deepcopy(device['flow'])
-                            patch_data['observedAt'] = fiware_time
-                            patch_data['value'] = str(round(self.getlinkvalue(index, en.FLOW),self.value_dp))
+                            for link_label in self.link_property_lookups:
+                                link_info = self.link_property_lookups[link_label]
 
-                            fiware_wrapper.patch_entity(device['id'], {'flow': patch_data}, self.fiware_service)
+                                patch_data = copy.deepcopy(device[link_label])
+                                patch_data['observedAt'] = fiware_time
+                                patch_data['value'] = str(round(self.getlinkvalue(index,link_info['label']),self.value_dp))
+
+                                fiware_wrapper.patch_entity(device['id'], {link_label: patch_data}, self.fiware_service)
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 
