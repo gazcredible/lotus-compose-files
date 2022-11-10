@@ -99,7 +99,7 @@ def testbed(fiware_wrapper:unexewrapper, logger:unexefiware.base_logger.BaseLogg
         print('\n')
         print('DEVICE_BROKER: ' + os.environ['DEVICE_BROKER'] + ' ' + wallclock_sim.sim_inst.fiware_service)
         print('Sim time: ' + str(sim_inst.get_sim_time()) + ' ' + str(sim_inst.elapsed_datetime()))
-        print('Sim step: ' + str(SEC_TO_MIN(sim_inst.get_hyd_step())) + 'min')
+        print('Sim step: ' + str(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step())) + 'min')
 
         print('\n')
         print('1..Reset sim')

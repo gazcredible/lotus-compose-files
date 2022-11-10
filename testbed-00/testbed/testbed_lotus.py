@@ -58,7 +58,7 @@ if __name__ == '__main__':
 
     #GARETH - choose epanet location here ...
     fiware_service = 'GUW'
-    #fiware_service = 'AAA'
+    fiware_service = 'AAA'
 
     sensor_list = []
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0, minute=0, second=0)
