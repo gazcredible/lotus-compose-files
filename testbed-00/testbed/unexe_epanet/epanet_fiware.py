@@ -44,7 +44,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
         self.device_index = 1
 
-    def do_link(self, fiware_wrapper, fiware_service, epanet_id, fiware_time):
+    def do_link(self, fiware_wrapper, epanet_id, fiware_time):
 
         try:
             index = self.getlinkindex(epanet_id)
@@ -83,12 +83,12 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
                 device['location']['value']['coordinates'] = [round(coords[0], 5), round(coords[1], 5)]
                 device['epanet_reference']['value'] = json.dumps({'urn': device['id'], 'epanet_id': epanet_id, 'epanet_type': 'link'})
-                fiware_wrapper.create_instance(entity_json=device, service=fiware_service, link=device['@context'])
+                fiware_wrapper.create_instance(entity_json=device, service=self.fiware_service, link=device['@context'])
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
-    def do_node(self, fiware_wrapper, fiware_service, epanet_id, fiware_time):
+    def do_node(self, fiware_wrapper, epanet_id, fiware_time):
 
         try:
             index = self.getnodeindex(epanet_id)
@@ -111,7 +111,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
                 device['location']['value']['coordinates'] = [round(coords[0], 5), round(coords[1], 5)]
                 device['epanet_reference']['value'] = json.dumps({'urn': device['id'], 'epanet_id': epanet_id, 'epanet_type': 'node'})
-                fiware_wrapper.create_instance(entity_json=device, service=fiware_service, link=device['@context'])
+                fiware_wrapper.create_instance(entity_json=device, service=self.fiware_service, link=device['@context'])
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
@@ -177,8 +177,6 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         return ("urn:ngsi-ld:" + 'Device' + ':' + sensor_name).replace(' ', '-')
 
     def reset(self, sensor_list:list=None, start_datetime:datetime.datetime=None):
-
-        print(str(self.get_hyd_step()))
         super().reset(start_datetime)
 
         self.delete()
@@ -243,10 +241,10 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
             for sensor in sensor_list:
                 if 'Type' in sensor:
                     if sensor['Type'] == 'pressure':
-                        self.do_node(fiware_wrapper, self.fiware_service, sensor['ID'], sim_fiware_time)
+                        self.do_node(fiware_wrapper, sensor['ID'], sim_fiware_time)
 
                     if sensor['Type'] == 'flow':
-                        self.do_link(fiware_wrapper, self.fiware_service, sensor['ID'], sim_fiware_time)
+                        self.do_link(fiware_wrapper, sensor['ID'], sim_fiware_time)
 
 
         except Exception as e:

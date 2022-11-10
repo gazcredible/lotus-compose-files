@@ -79,13 +79,15 @@ class epanet_model:
     def step(self):
         try:
             if self.epanetmodel is not None:
+                self.elapsed_time_in_sec = self.next_time_step_in_sec
+
                 en.runH(self.epanetmodel.proj_for_simulation)
                 t = en.nextH(self.epanetmodel.proj_for_simulation)
-                self.elapsed_time_in_sec += t
 
-                if True:
-                    dur = en.gettimeparam(self.epanetmodel.proj_for_simulation, en.DURATION)
-                    en.settimeparam(self.epanetmodel.proj_for_simulation, en.DURATION, dur + t)
+                self.next_time_step_in_sec += t
+
+                dur = en.gettimeparam(self.epanetmodel.proj_for_simulation, en.DURATION)
+                en.settimeparam(self.epanetmodel.proj_for_simulation, en.DURATION, dur + t)
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(), e)
@@ -96,10 +98,16 @@ class epanet_model:
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
+    def get_pattern_step(self) -> float:
+        return en.gettimeparam(self.epanetmodel.proj_for_simulation, en.PATTERNSTEP)
+
     def set_hyd_step(self, time_in_seconds):
+        #GARETH -   this appears to be limited to a max of PATTERN TIMESTEP in the inp file
+        #           changing pattern timestep just slows down/speeds up the simulation, it still
+        #           has the same values but over a longer/shorter timeframe
         en.settimeparam(self.epanetmodel.proj_for_simulation, en.HYDSTEP, time_in_seconds)
 
-    def get_hyd_step(self):
+    def get_hyd_step(self) -> float:
         return en.gettimeparam(self.epanetmodel.proj_for_simulation, en.HYDSTEP)
 
     def getcount(self,object):
@@ -110,7 +118,6 @@ class epanet_model:
 
     def getnodetype(self, index):
         return en.getnodetype(self.epanetmodel.proj_for_simulation, index)
-
 
     def getnodevalue(self, index, prop):
         return en.getnodevalue(self.epanetmodel.proj_for_simulation, index, prop)

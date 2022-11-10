@@ -35,7 +35,7 @@ def erase_broker():
 
     try:
         unexebroker.broker_globals.contextbroker.init(drop_all_tables=True)
-        unexebroker.broker_globalscontextbroker.logger.print_request(request, 200)
+        unexebroker.broker_globals.contextbroker.logger.formatmsg(request, 200)
         return '',200
 
     except Exception as e:

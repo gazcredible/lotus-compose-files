@@ -25,7 +25,7 @@ def init(stellio_style = False, drop_all_tables=False, logger = None):
 
 #-------------------------------------------------------------------------------------------------------------------------------------
 #my shonky commands
-@blueprint.route('/ngsi-ld/v1/erase_broker', methods=['POST'])
+@blueprint.route('/unexe-broker/v1/erase_broker', methods=['POST'])
 @cross_origin()
 def erase_broker():
     try:
