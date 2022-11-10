@@ -18,6 +18,19 @@ import epanet.toolkit as en
 import pyproj
 
 
+def MIN_TO_SEC(x):
+    return x*60
+
+def SEC_TO_MIN(x):
+    return (x/60)
+
+def MIN_TO_HOUR(x):
+    return (x/60)
+
+def SEC_TO_HOUR(x):
+    return MIN_TO_HOUR(SEC_TO_MIN(x))
+
+
 class epanet_model:
     def __init__(self):
         self.logger = unexefiware.base_logger.BaseLogger()

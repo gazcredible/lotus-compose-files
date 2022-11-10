@@ -20,12 +20,6 @@ import epanet.toolkit as en
 import matplotlib.pyplot as plt
 import numpy as np
 
-def MIN_TO_SEC(x):
-    return x*60
-
-def SEC_TO_MIN(x):
-    return int(x/60)
-
 
 def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger, sim_inst:unexe_epanet.epanet_fiware.epanet_fiware, sensor_list:list):
     quitApp = False
@@ -40,13 +34,13 @@ def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.
         print('\n')
         print('DEVICE_BROKER: ' + os.environ['DEVICE_BROKER'] + ' ' + fiware_service)
         print('Sim time: ' + str(sim_inst.get_sim_time()) + ' ' + str(sim_inst.elapsed_datetime() ))
-        print('Sim step: ' + str(SEC_TO_MIN(sim_inst.get_hyd_step())) +'min' )
+        print('Sim step: ' + str(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step())) +'min' )
 
         print('\n')
         print('1..Reset Sim')
-        print('2..Run a step: ' + str( int(SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' min' )
-        print('3..Run 12 hours: ' + str( int(12*60 / SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
-        print('4..Run a day: '  + str( int(24*60 / SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
+        print('2..Run a step: ' + str( int(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' min' )
+        print('3..Run 12 hours: ' + str( int(12*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
+        print('4..Run a day: '  + str( int(24*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
         print('5..Leak Management')
         print('8..WDN graph')
         print('9..FIWARE')
@@ -69,14 +63,14 @@ def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.
 
         if key == '3':
             print('Run 12 steps')
-            time_steps = int(12*60 / SEC_TO_MIN(sim_inst.get_hyd_step()))
+            time_steps = int(12*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
 
             for i in range(0, time_steps):
                 sim_inst.step()
 
         if key == '4':
             print('Run a day')
-            time_steps = int(24*60 / SEC_TO_MIN(sim_inst.get_hyd_step()))
+            time_steps = int(24*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
 
             for i in range(0, time_steps):
                 sim_inst.step()
@@ -88,4 +82,4 @@ def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.
             testbed_fiware.epanet_graph(sim_inst, logger)
 
         if key == '9':
-            testbed_fiware.testbed(fiware_wrapper, fiware_service, logger, unexefiware.time.datetime_to_fiware(sim_inst.elapsed_datetime()) )
+            testbed_fiware.testbed(fiware_wrapper, sim_inst)

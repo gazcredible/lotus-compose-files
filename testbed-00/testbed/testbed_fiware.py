@@ -13,6 +13,7 @@ import support
 import datetime
 import pyproj
 import unexe_epanet.epanet_fiware
+import unexe_epanet.epanet_model
 import unexewrapper
 
 
@@ -20,12 +21,12 @@ import epanet.toolkit as en
 import matplotlib.pyplot as plt
 import numpy as np
 
-def testbed(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.base_logger.BaseLogger, current_datetime_fiware:str):
+def testbed(fiware_wrapper:unexefiware,sim_inst:unexe_epanet.epanet_fiware.epanet_fiware):#fiware_service:str, logger:unexefiware.base_logger.BaseLogger, current_datetime_fiware:str):
     quitApp = False
 
     while quitApp is False:
         print('\n')
-        print('DEVICE_BROKER: ' + os.environ['DEVICE_BROKER'] + ' ' + fiware_service)
+        print('DEVICE_BROKER: ' + os.environ['DEVICE_BROKER'] + ' ' + sim_inst.fiware_service)
 
         print('\n')
         print('1..Current Devices')
@@ -40,7 +41,7 @@ def testbed(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.ba
 
         if key == '1':
             print('Devices')
-            result = fiware_wrapper.get_all_type(fiware_service, 'Device')
+            result = fiware_wrapper.get_all_type(sim_inst.fiware_service, 'Device')
 
             if result[0] == 200:
                 for entity in result[1]:
@@ -53,14 +54,15 @@ def testbed(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.ba
             print('Historic Devices')
 
             start_date = '1971-01-02T00:00:00Z'
+            current_datetime_fiware = unexefiware.time.datetime_to_fiware(sim_inst.elapsed_datetime())
 
-            device_list = fiware_wrapper.get_all_type(fiware_service, 'Device')
+            device_list = fiware_wrapper.get_all_type(sim_inst.fiware_service, 'Device')
 
             if device_list[0] == 200:
                 for entity in device_list[1]:
 
                     for controlled_property in entity['controlledProperty']['value']:
-                        result = fiware_wrapper.get_temporal(fiware_service, entity['id'], [controlled_property], start_date,current_datetime_fiware)
+                        result = fiware_wrapper.get_temporal(sim_inst.fiware_service, entity['id'], [controlled_property], start_date,current_datetime_fiware)
 
                         if result[0] == 200:
                             x = []
@@ -69,8 +71,8 @@ def testbed(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.ba
                             try:
                                 step = 0
                                 for entry in result[1][controlled_property]['values']:
-                                    x.append(step)
-                                    step += 1
+                                    x.append( unexe_epanet.epanet_model.SEC_TO_HOUR(step) )
+                                    step += sim_inst.get_hyd_step()
                                     y.append(float(entry[0]))
 
                             except Exception as e:
@@ -86,7 +88,7 @@ def testbed(fiware_wrapper:unexefiware,fiware_service:str, logger:unexefiware.ba
                             title += ' '
                             title += controlled_property
                             title += '\n'
-                            title += str(step) + ' steps, date time:' + str(current_datetime_fiware)
+                            title += str(round(unexe_epanet.epanet_model.SEC_TO_HOUR(step),2)) + ' hours, date time:' + str(current_datetime_fiware)
 
                             plt.title(title)
                             plt.xlabel('')

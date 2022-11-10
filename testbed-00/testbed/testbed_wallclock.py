@@ -12,13 +12,6 @@ import time
 
 import testbed_fiware
 
-def MIN_TO_SEC(x):
-    return x*60
-
-def SEC_TO_MIN(x):
-    return int(x/60)
-
-
 class epanet_wallclock():
     def __init__(self, sim_inst:unexe_epanet.epanet_fiware):
         self.sim_inst = sim_inst
@@ -139,4 +132,4 @@ def testbed(fiware_wrapper:unexewrapper, logger:unexefiware.base_logger.BaseLogg
             testbed_fiware.epanet_graph(wallclock_sim.sim_inst, logger)
 
         if key == '9':
-            testbed_fiware.testbed(fiware_wrapper, wallclock_sim.sim_inst.fiware_service, logger, unexefiware.time.datetime_to_fiware(wallclock_sim.sim_inst.elapsed_datetime()) )
+            testbed_fiware.testbed(fiware_wrapper, wallclock_sim.sim_inst) #.fiware_service, logger, unexefiware.time.datetime_to_fiware(wallclock_sim.sim_inst.elapsed_datetime()) )
