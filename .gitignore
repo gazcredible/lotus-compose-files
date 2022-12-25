@@ -1,4 +1,7 @@
 
+.idea/
+
+
 .DS_Store
 
 testbed-00/testbed/__pycache__/
