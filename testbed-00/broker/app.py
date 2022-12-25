@@ -19,7 +19,7 @@ from waitress import serve
 
 import unexebroker.broker_flask
 import unexebroker.unexe_broker
-import  unexefiware.base_logger
+import unexefiware.base_logger
 
 app = Flask(__name__)
 app.register_blueprint(unexebroker.broker_flask.blueprint)
