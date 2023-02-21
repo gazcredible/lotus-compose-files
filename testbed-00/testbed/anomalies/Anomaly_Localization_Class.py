@@ -112,10 +112,13 @@ class AnomalyLocalization():
                 if sensor['Type'] == 'pressure':
                     read = en.getnodevalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.PRESSURE)
                     rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
+                else:
+                    if sensor['Type'] == 'flow':
+                        read = en.getlinkvalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.FLOW)
+                        rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
+                    else:
+                        raise  Exception('Sensor Type undefined')
 
-                if sensor['Type'] == 'flow':
-                    read = en.getlinkvalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.FLOW)
-                    rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
             # add noise via patterns for every 24 hours / new date
             if old_date != report_date:
                 self.add_demand_noise()
@@ -185,11 +188,12 @@ class AnomalyLocalization():
                 if sensor['Type'] == 'pressure':
                     read = en.getnodevalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.PRESSURE)
                     rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
-
-                if sensor['Type'] == 'flow':
-                    read = en.getlinkvalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.FLOW)
-                    rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
-
+                else:
+                    if sensor['Type'] == 'flow':
+                        read = en.getlinkvalue(self.epanetmodel.proj_for_simulation, sensor['Index'], en.FLOW)
+                        rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
+                    else:
+                        raise Exception
             # add noise via patterns for every 24 hours / new date
             if old_date != report_date:
                 self.add_demand_noise()

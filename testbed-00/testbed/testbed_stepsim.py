@@ -1,27 +1,18 @@
 import local_environment_settings
 import os
 
-import inspect
-import json
-
-import matplotlib.collections
 import unexefiware.base_logger
-import unexefiware.fiwarewrapper
 import unexefiware.time
 import unexeaqua3s.resourcebuilder
-import support
 import datetime
-import pyproj
 import unexe_epanet.epanet_fiware
 import unexewrapper
 import testbed_fiware
-
-import epanet.toolkit as en
-import matplotlib.pyplot as plt
-import numpy as np
+import testbed_lotus
 
 
-def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger, sim_inst:unexe_epanet.epanet_fiware.epanet_fiware, sensor_list:list):
+
+def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger, sim_inst:testbed_lotus.Aqua3S_Fiware, sensor_list:list):
     quitApp = False
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0,minute=0,second=0)
 
@@ -41,6 +32,8 @@ def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.
         print('2..Run a step: ' + str( int(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' min' )
         print('3..Run 12 hours: ' + str( int(12*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
         print('4..Run a day: '  + str( int(24*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
+        print('4a..Run a week')
+        print('4b..Run a month')
         print('5..Leak Management')
         print('8..WDN graph')
         print('9..FIWARE')
@@ -59,21 +52,34 @@ def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.
 
         if key == '2':
             print('Run a step')
-            sim_inst.step()
+            sim_inst.simulate(1)
+
 
         if key == '3':
             print('Run 12 steps')
             time_steps = int(12*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
 
-            for i in range(0, time_steps):
-                sim_inst.step()
+            sim_inst.simulate(time_steps)
 
         if key == '4':
             print('Run a day')
             time_steps = int(24*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
 
-            for i in range(0, time_steps):
-                sim_inst.step()
+            sim_inst.simulate(time_steps)
+
+        if key == '4a':
+            print('Run a week')
+            time_steps = int((7*24*60) / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
+
+            sim_inst.simulate(time_steps)
+
+        if key == '4b':
+            print('Run a month')
+            time_steps = int((31*24*60) / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
+
+            sim_inst.simulate(time_steps)
+
+
 
         if key == '5':
             testbed_fiware.sim_leak_management(sim_inst, fiware_wrapper, logger)

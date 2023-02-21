@@ -1,4 +1,6 @@
 from textwrap import indent
+
+import anomalies.testbed
 import local_environment_settings
 import os
 
@@ -24,9 +26,37 @@ import numpy as np
 import testbed_stepsim
 import testbed_wallclock
 
+#for anomalies
+import anomalies.testbed
+import testbed_anomalies
+import unexeaqua3s.visualiser
+import unexeaqua3s.workhorse_backend
 
-def load_epanet_model(fiware_service):
-    sim_model = unexe_epanet.epanet_fiware.epanet_fiware()
+logger = unexefiware.base_logger.BaseLogger()
+
+class Aqua3S_Fiware(unexe_epanet.epanet_fiware.epanet_fiware):
+    def __init__(self):
+        super().__init__()
+
+        global logger
+
+        self.workhorse = unexeaqua3s.workhorse_backend.WorkhorseBackend()
+        self.workhorse.init(logger=logger, debug=True)
+
+    def on_patch_entity(self, fiware_service:str, entity_id:str):
+        pass
+
+
+    def simulate(self, steps:int):
+        for i in range(0, steps):
+            self.step()
+
+        self.workhorse.add_command(self.fiware_service, unexeaqua3s.workhorse_backend.command_pilot_update)
+
+
+def load_epanet_model(fiware_service:str) -> Aqua3S_Fiware:
+    #GARETH - I am building the sim around aqua3S
+    sim_model = Aqua3S_Fiware()
 
     print('GARETH - I have changed file loading !')
     #inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'unexe_epanet.inp'
@@ -38,7 +68,7 @@ def load_epanet_model(fiware_service):
 
     if fiware_service == 'GUW':
         coord_system = pyproj.CRS.from_epsg(32646)
-        inp_file = 'local_data' + os.sep+'KMKHYA_GHY_WDN.inp'
+        inp_file = 'local_data' + os.sep+'KMKHYA_GHY_WDN_24.inp'
 
         sim_model.init(epanet_file=inp_file, coord_system=coord_system, fiware_service=fiware_service, flip_coordindates=True)
 
@@ -48,17 +78,15 @@ def load_epanet_model(fiware_service):
 
 sim_lookup = {}
 
-
-if __name__ == '__main__':
-    #testbed()
-    logger = unexefiware.base_logger.BaseLogger()
+def testbed():
+    global logger
 
     fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
     fiware_wrapper.init(logger=logger)
 
-    #GARETH - choose epanet location here ...
+    # GARETH - choose epanet location here ...
     fiware_service = 'GUW'
-   #fiware_service = 'AAA'
+    # fiware_service = 'AAA'
 
     sensor_list = []
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0, minute=0, second=0)
@@ -78,6 +106,7 @@ if __name__ == '__main__':
         print('\n')
         print('1..Sim step')
         print('2..Wall clock')
+        print('3..Anomaly Testbed')
         print('X..Back')
         print('\n')
 
@@ -88,9 +117,20 @@ if __name__ == '__main__':
 
         if key == '1':
             sim_inst = load_epanet_model(fiware_service)
-            testbed_stepsim.testbed(fiware_wrapper,fiware_service,logger, sim_inst, sensor_list)
+
+            testbed_stepsim.testbed(fiware_wrapper, fiware_service, logger, sim_inst, sensor_list)
 
         if key == '2':
             sim_inst = load_epanet_model(fiware_service)
-            sim_inst.fiware_service = fiware_service +'-WC'
+            sim_inst.fiware_service = fiware_service + '-WC'
+
             testbed_wallclock.testbed(fiware_wrapper, logger, sim_inst, sensor_list)
+
+        if key == '3':
+            sim_inst = load_epanet_model(fiware_service)
+
+            testbed_anomalies.testbed(fiware_wrapper, logger, sim_inst, sensor_list)
+
+
+if __name__ == '__main__':
+    testbed()

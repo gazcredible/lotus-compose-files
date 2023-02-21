@@ -23,16 +23,17 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
         self.link_property_lookups = {}
         self.link_property_lookups['flow'] = {'label': en.FLOW, 'unitcode': 'G51'}
-        self.link_property_lookups['velocity'] = {'label': en.VELOCITY, 'unitcode':  'XXX'}
-        self.link_property_lookups['headloss'] = {'label': en.HEADLOSS, 'unitcode':  'XXX'}
-        self.link_property_lookups['quality'] = {'label': en.QUALITY, 'unitcode':  'XXX'}
-        self.link_property_lookups['status'] = {'label': en.STATUS, 'unitcode':  'XXX'}
-        self.link_property_lookups['setting'] = {'label':en.SETTING, 'unitcode':  'XXX'}
+        #reduce properties to speed up simulation
+        #self.link_property_lookups['velocity'] = {'label': en.VELOCITY, 'unitcode':  'XXX'}
+        #self.link_property_lookups['headloss'] = {'label': en.HEADLOSS, 'unitcode':  'XXX'}
+        #self.link_property_lookups['quality'] = {'label': en.QUALITY, 'unitcode':  'XXX'}
+        #self.link_property_lookups['status'] = {'label': en.STATUS, 'unitcode':  'XXX'}
+        #self.link_property_lookups['setting'] = {'label':en.SETTING, 'unitcode':  'XXX'}
 
         self.node_property_lookups = {}
-        self.node_property_lookups['head'] = {'label': en.HEAD, 'unitcode': 'XXX'}
+        #self.node_property_lookups['head'] = {'label': en.HEAD, 'unitcode': 'XXX'}
         self.node_property_lookups['pressure'] = {'label': en.PRESSURE, 'unitcode':  'N23'}
-        self.node_property_lookups['quality'] = {'label':  en.QUALITY, 'unitcode':  'XXX'}
+        #self.node_property_lookups['quality'] = {'label':  en.QUALITY, 'unitcode':  'XXX'}
 
     def init(self, epanet_file:str, coord_system:pyproj.CRS, fiware_service:str, flip_coordindates:bool=False):
 
@@ -76,6 +77,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
                 device = self.create_device()
                 device['id'] = self.fiware_legal_name('urn:ngsi-ld:Device:' + epanet_id)
+                device['name']['value'] = epanet_id
 
                 for link_label in self.link_property_lookups:
                     link_info = self.link_property_lookups[link_label]
@@ -104,6 +106,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
                 device = self.create_device()
                 device['id'] = self.fiware_legal_name('urn:ngsi-ld:Device:' + epanet_id)
+                device['name']['value'] = epanet_id
 
                 for node_label in self.node_property_lookups:
                     node_info = self.node_property_lookups[node_label]
@@ -118,6 +121,9 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
     def fiware_legal_name(self, name):
         return name.replace(' ', '-')
+
+    def on_patch_entity(self, fiware_service:str, entity_id:str):
+        pass
 
     def device_add_property(self, device, property_label, property_value, property_unitcode, fiware_time):
 
@@ -246,7 +252,6 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                     if sensor['Type'] == 'flow':
                         self.do_link(fiware_wrapper, sensor['ID'], sim_fiware_time)
 
-
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
@@ -275,6 +280,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                                 patch_data['value'] = str(round(self.getnodevalue(index, node_info['label']),self.value_dp))
 
                                 fiware_wrapper.patch_entity(device['id'], {node_label: patch_data}, self.fiware_service)
+                                self.on_patch_entity(self.fiware_service,device['id'])
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 
@@ -291,6 +297,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
                                 patch_data['value'] = str(round(self.getlinkvalue(index,link_info['label']),self.value_dp))
 
                                 fiware_wrapper.patch_entity(device['id'], {link_label: patch_data}, self.fiware_service)
+                                self.on_patch_entity(self.fiware_service, device['id'])
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 

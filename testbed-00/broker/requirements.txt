@@ -12,3 +12,4 @@ orjson
 ./packages/unexefiware-f4w.0.0.3-py3-none-any.whl
 
 waitress
+pytest

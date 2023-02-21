@@ -11,7 +11,6 @@ import os
 import pyproj
 
 import anomalies.Anomaly_Localization_Class as AL
-import epanet.epanet_model
 import datetime
 
 import geopandas
@@ -24,9 +23,9 @@ import json
 import numpy as np
 from typing import Optional
 
-import guw_device_info
 import matplotlib.pyplot as plt
 
+import testbed_fiware
 
 """
 steps:
@@ -254,44 +253,22 @@ class AnomalyLocalisation(AL.AnomalyLocalization):
         plt.show()
 
 
+import unexewrapper
+import unexe_epanet.epanet_fiware
 
-
-def anomaly_localisation_testbed(fiware_service):
+def anomaly_localisation_testbed(fiware_wrapper:unexewrapper, logger:unexefiware.base_logger.BaseLogger, sim_inst:unexe_epanet.epanet_fiware.epanet_fiware, sensor_list:list):
     try:
-        inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
-
-        #load inp file into EPASim so we can get the sensors out of it
-        water_model = epanet.epanet_model.epanet_model()
-
-        coord_str = ''
-
-        if fiware_service == 'AAA':
-            coord_str = 'epsg:32632'
-            coord_system = pyproj.CRS.from_epsg(32632)
-            flip_coordindates = True
-
-        if fiware_service == 'GUW':
-            coord_str = 'epsg:32646'
-            coord_system = pyproj.CRS.from_epsg(32646)
-            flip_coordindates = True
-
-        coord_system = pyproj.CRS.from_epsg(32632)
-
-        water_model.init(fiware_service,inp_file,coord_system,flip_coordindates)
-
-        sensors = water_model.get_anomaly_sensors()
-        leakNodeIDs = water_model.get_anomaly_leaknode_ids()
-
-        leakNodeIDs = [leakNodeIDs[0]]#,leakNodeIDs[1]]
-
-        network_name = fiware_service
-        test = AnomalyLocalisation(inp_file=inp_file, network_name=network_name, sensors=sensors, proj_auth_code=coord_str)
+        network_name = sim_inst.fiware_service
+        test = AnomalyLocalisation(inp_file=sim_inst.inp_file, network_name=network_name, sensors=sensor_list, proj_auth_code=sim_inst.coord_system)
 
         test.get_sensor_indices()
 
         if False:
+            #always build the dataset for the time being
+            #if leak_nodes is None, I think we're assuming there's no existing leaks, they will come at run-time
+
             start_time = datetime.datetime.now()
-            test.build_datasets(leak_nodes=leakNodeIDs,
+            test.build_datasets(leak_nodes=None,
                                 noleak_dataset=True,
                                 training_dataset=True,
                                 testing_dataset=True)
@@ -299,11 +276,16 @@ def anomaly_localisation_testbed(fiware_service):
             simulationTime = datetime.datetime.now() - start_time
 
             test.save_datafiles()
-        else:
-            test.load_datafiles()
+
+        test.load_datafiles()
 
         #can save this data, then don't need to load the training and test data
         test.ML_buildModel()
+
+        #test the dataset with a created leak
+        #we're going to use the 1st node in the junction list
+        nodeIDs = test.epanetmodel.get_node_ids(enu.NodeTypes.Junction)
+        leak_id = nodeIDs[0]
 
         simulationstart_date = datetime.datetime(2022, 4, 29)
         leakstart_date = datetime.datetime(2022, 5, 8, 6, 0, 0)
@@ -313,10 +295,10 @@ def anomaly_localisation_testbed(fiware_service):
         leakstart_seconds = int((leakstart_date - simulationstart_date).total_seconds())
         leakStart_step = int(leakstart_seconds / stepDuration)
 
-        leak_id = leakNodeIDs[0]
-
+        #level of leak
         leakEmitter = 5
 
+        #build leak data
         leak_df = test.sim_leak(duration=leakstart_seconds + (48 * 60 * 60),
                                 stepDuration=stepDuration,
                                 simulation_date=simulationstart_date,
@@ -343,11 +325,11 @@ def anomaly_localisation_testbed(fiware_service):
         sample_answer['Lat'] = coordinates[1]
         sample_answer = geopandas.GeoDataFrame(sample_answer,
                                                geometry=geopandas.points_from_xy(sample_answer['Long'], sample_answer['Lat']),
-                                               crs=coord_str)
+                                               crs=sim_inst.coord_system)
 
         search_areas = test.MCLP(sample=sample, grid_spacing=40, search_radius=500, num_SA=2)
 
-        test.visualise_with_matplotlib(search_areas)
+        test.visualise_with_matplotlib(mclp_results=search_areas)
 
         print(str(search_areas))
     except Exception as e:
@@ -355,16 +337,15 @@ def anomaly_localisation_testbed(fiware_service):
         logger.exception(inspect.currentframe(), e)
 
 
-def testbed(fiware_service):
+def testbed(fiware_wrapper:unexewrapper, logger:unexefiware.base_logger.BaseLogger, sim_inst:unexe_epanet.epanet_fiware.epanet_fiware, sensor_list:list):
     quitApp = False
 
     while quitApp is False:
         print('\n')
-        print('PILOT: '+ fiware_service)
+        print('PILOT: '+ sim_inst.fiware_service)
 
         print('\n')
         print('1..Do anomaly localisation testbed')
-        print('2..Do GUW from data')
         print('3..Visualisation Test')
 
 
@@ -374,108 +355,13 @@ def testbed(fiware_service):
         key = input('>')
 
         if key == '1':
-            anomaly_localisation_testbed(fiware_service)
-
-        if key == '2':
-            try:
-                coord_str = 'epsg:32632'
-                inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
-
-                sensors = []
-                leakNodeIDs = []
-
-                for entry in guw_device_info.info:
-                    if 'junction' in entry[6]:
-                        sensors.append({'ID': entry[6]['junction'], 'Type': 'pressure'})
-                        leakNodeIDs.append(entry[6]['junction'])
-
-                    if 'pipe' in entry[6]:
-                        sensors.append({'ID': entry[6]['pipe'], 'Type': 'flow'})
-
-                #build leak list from ...
-
-                test = AnomalyLocalisation(inp_file=inp_file, network_name=fiware_service, sensors=sensors, proj_auth_code=coord_str)
-
-                test.get_sensor_indices()
-
-                if False:
-                    start_time = datetime.datetime.now()
-                    test.build_datasets(leak_nodes=leakNodeIDs,
-                                        noleak_dataset=True,
-                                        training_dataset=True,
-                                        testing_dataset=True)
-
-                    simulationTime = datetime.datetime.now() - start_time
-
-                    test.save_datafiles()
-                else:
-                    test.load_datafiles()
-
-                # can save this data, then don't need to load the training and test data
-                test.ML_buildModel()
-
-                simulationstart_date = datetime.datetime(2022, 4, 29)
-                leakstart_date = datetime.datetime(2022, 5, 8, 6, 0, 0)
-                leakwindow_start_date = datetime.datetime(2022, 5, 8, 12, 0, 0)
-                leakwindow_end_date = datetime.datetime(2022, 5, 8, 16, 0, 0)
-                stepDuration = 15 * 60
-                leakstart_seconds = int((leakstart_date - simulationstart_date).total_seconds())
-                leakStart_step = int(leakstart_seconds / stepDuration)
-
-                leak_id = leakNodeIDs[10]
-                leak_id = 'GJ462'
-                leak_id = 'GJ121'
-
-                leakEmitter = 5
-
-                leak_df = test.sim_leak(duration=leakstart_seconds + (48 * 60 * 60),
-                                        stepDuration=stepDuration,
-                                        simulation_date=simulationstart_date,
-                                        leakID=leak_id,
-                                        leakEmitter=leakEmitter,
-                                        leakStart_step=leakStart_step,
-                                        sigma=0.5,
-                                        leakExponent=0.99)
-
-                leak_df['leakNode'] = leak_id
-                leak_df['leakEmitter'] = leakEmitter
-                leak_df['X-coord'] = 'X'
-                leak_df['Y-coord'] = 'Y'
-                leak_df['timeseries_id'] = 'Test'
-                # %%
-                leak_df = leak_df[leak_df.ReportTime >= (leakwindow_start_date)]
-                leak_df = leak_df[leak_df.ReportTime < (leakwindow_end_date)]
-                # %%
-                sample, sample_answer = test.ML_create_dataset(leak_df)
-
-                coordinates = test.epanetmodel.get_node_property(sample_answer[0], enu.JunctionProperties.Position)
-                sample_answer = pd.DataFrame(sample_answer, columns=['Node_ID'], index=[0])
-                sample_answer['Long'] = coordinates[0]
-                sample_answer['Lat'] = coordinates[1]
-                sample_answer = geopandas.GeoDataFrame(sample_answer,
-                                                       geometry=geopandas.points_from_xy(sample_answer['Long'], sample_answer['Lat']),
-                                                       crs=coord_str)
-
-                search_areas = test.MCLP(sample=sample, grid_spacing=20, search_radius=100, num_SA=5)
-
-                print(str(search_areas))
-
-                test.visualise_with_matplotlib(coordinates, search_areas, title = str(leak_id) )
-
-
-
-            except Exception as e:
-                logger = unexefiware.base_logger.BaseLogger()
-                logger.exception(inspect.currentframe(), e)
+            anomaly_localisation_testbed(fiware_wrapper,logger,sim_inst,sensor_list)
 
         if key == '3':
-            inp_file = '/docker/lotus-visualiser/visualiser/data/' + fiware_service + '/waternetwork/unexe_epanet.inp'
-            sensors = []
-            coord_str = 'epsg:32632'
-
-            test = AnomalyLocalisation(inp_file=inp_file, network_name=fiware_service, sensors=sensors, proj_auth_code=coord_str)
-
+            test = AnomalyLocalisation(inp_file=sim_inst.inp_file, network_name=sim_inst.fiware_service, sensors=sensor_list, proj_auth_code=sim_inst.coord_system)
             test.visualise_with_matplotlib()
+
+            testbed_fiware.epanet_graph(sim_inst,logger)
 
         if key == 'x':
                 quitApp = True
