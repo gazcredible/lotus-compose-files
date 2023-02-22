@@ -97,7 +97,7 @@ def testbed(fiware_wrapper:unexefiware,sim_inst:unexe_epanet.epanet_fiware.epane
                             plt.show()
 
 
-def sim_leak_management(sim: unexe_epanet.epanet_fiware, fiware_wrapper: unexefiware, logger: unexefiware.base_logger.BaseLogger):
+def sim_leak_management(sim: unexe_epanet.epanet_fiware, logger=None):
     quitApp = False
 
     while quitApp is False:
@@ -140,7 +140,7 @@ def sim_leak_management(sim: unexe_epanet.epanet_fiware, fiware_wrapper: unexefi
                     print(str(emitter))
 
             except Exception as e:
-                logger.exception(inspect.currentframe(), e)
+                sim.logger.exception(inspect.currentframe(), e)
 
 
 def epanet_graph(sim_inst, logger):

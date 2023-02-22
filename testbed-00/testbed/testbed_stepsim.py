@@ -9,10 +9,10 @@ import unexe_epanet.epanet_fiware
 import unexewrapper
 import testbed_fiware
 import testbed_lotus
+import models
 
 
-
-def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger, sim_inst:testbed_lotus.Aqua3S_Fiware, sensor_list:list):
+def testbed(fiware_wrapper:unexewrapper, fiware_service:str, logger:unexefiware.base_logger.BaseLogger, sim_inst:models.Aqua3S_Fiware, sensor_list:list):
     quitApp = False
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0,minute=0,second=0)
 

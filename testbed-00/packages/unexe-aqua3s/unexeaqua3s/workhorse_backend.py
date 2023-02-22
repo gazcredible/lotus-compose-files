@@ -453,10 +453,16 @@ class PilotProcessor:
         #GARETH - id dict != none it's a single device to update
         if self.disable_updates == False:
 
+            force_interday = False
+            now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(self.fiware_service)).replace(tzinfo=None)
+
             if data and 'force_interday' in data:
-                unexeaqua3s.support.do_charting(self.fiware_service, force_interday=data['force_interday'].lower() == 'true', logger=self.logger)
-            else:
-                unexeaqua3s.support.do_charting(self.fiware_service, force_interday=False, logger=self.logger)
+                force_interday = data['force_interday'].lower() == 'true'
+
+            if data and 'datetime' in data:
+                now = unexefiware.time.fiware_to_datetime(data['datetime'])
+                
+            unexeaqua3s.support.do_charting(self.fiware_service, force_interday=force_interday, logger=self.logger, charting_time=now)            
         else:
             self.logger.log(inspect.currentframe(), 'No update enabled:' + self.fiware_service)
 
@@ -505,7 +511,8 @@ class PilotProcessor:
 
 
 
-        self.add_command(cmd = command_rebuild_charts)
+        #GARETH only do this once per block of updates
+        # self.add_command(cmd = command_rebuild_charts)
 
     def get_fiware_time(self):
         fiware_time = None

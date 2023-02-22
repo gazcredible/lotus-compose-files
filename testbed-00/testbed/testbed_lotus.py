@@ -25,6 +25,7 @@ import numpy as np
 
 import testbed_stepsim
 import testbed_wallclock
+import testbed_persistent_simstep
 
 #for anomalies
 import anomalies.testbed
@@ -32,31 +33,14 @@ import testbed_anomalies
 import unexeaqua3s.visualiser
 import unexeaqua3s.workhorse_backend
 
+import models
+
 logger = unexefiware.base_logger.BaseLogger()
 
-class Aqua3S_Fiware(unexe_epanet.epanet_fiware.epanet_fiware):
-    def __init__(self):
-        super().__init__()
 
-        global logger
-
-        self.workhorse = unexeaqua3s.workhorse_backend.WorkhorseBackend()
-        self.workhorse.init(logger=logger, debug=True)
-
-    def on_patch_entity(self, fiware_service:str, entity_id:str):
-        pass
-
-
-    def simulate(self, steps:int):
-        for i in range(0, steps):
-            self.step()
-
-        self.workhorse.add_command(self.fiware_service, unexeaqua3s.workhorse_backend.command_pilot_update)
-
-
-def load_epanet_model(fiware_service:str) -> Aqua3S_Fiware:
+def load_epanet_model(fiware_service:str) -> models.Aqua3S_Fiware:
     #GARETH - I am building the sim around aqua3S
-    sim_model = Aqua3S_Fiware()
+    sim_model = models.Aqua3S_Fiware(logger)
 
     print('GARETH - I have changed file loading !')
     #inp_file = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + fiware_service + os.sep + 'waternetwork' + os.sep + 'unexe_epanet.inp'
@@ -106,7 +90,7 @@ def testbed():
         print('\n')
         print('1..Sim step')
         print('2..Wall clock')
-        print('3..Anomaly Testbed')
+        print('3..Persistent Sim Step')
         print('X..Back')
         print('\n')
 
@@ -128,8 +112,7 @@ def testbed():
 
         if key == '3':
             sim_inst = load_epanet_model(fiware_service)
-
-            testbed_anomalies.testbed(fiware_wrapper, logger, sim_inst, sensor_list)
+            testbed_persistent_simstep.testbed(fiware_wrapper, sim_inst)
 
 
 if __name__ == '__main__':

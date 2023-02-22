@@ -151,11 +151,9 @@ class ChartService(unexeaqua3s.service.ServiceBase):
     def name(self):
         return 'ChartService'
 
-    def build_from_deviceInfo(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2):
+    def build_from_deviceInfo(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, now:datetime.datetime):
         try:
             self.logger.log(inspect.currentframe(), 'Start Chart building')
-            now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
-
             json_data = {}
 
             broker = deviceInfo.fiware_wrapper
@@ -236,11 +234,11 @@ class ChartService(unexeaqua3s.service.ServiceBase):
         except Exception as e:
             return data
 
-    def process_a_device(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, charting_data:dict, device_id:str, current_time:str):
+    def process_a_device(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, charting_data:dict, device_id:str, current_time:datetime.datetime):
         #get alll the temporal data for a give entity for all the time options and properties
         broker = deviceInfo.fiware_wrapper
 
-        time_attribs = self.get_time_attribs('year')
+        time_attribs = self.get_time_attribs('year',current_time)
         timewindow = self.get_time_from(time_attribs, current_time)
 
         props = unexefiware.model.get_controlled_properties(deviceInfo.deviceInfoList[device_id])
@@ -257,7 +255,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
 
             for tm in timelists:
                 charting_data[tm]['timestamp'] = unexefiware.time.datetime_to_fiware(current_time)
-                time_attribs = self.get_time_attribs(tm)
+                time_attribs = self.get_time_attribs(tm,current_time)
                 timewindow = self.get_time_from(time_attribs, current_time)
 
                 charting_data[tm]['labels'] = self.create_buckets(time_attribs, timewindow)
@@ -265,13 +263,14 @@ class ChartService(unexeaqua3s.service.ServiceBase):
                 for prop in props:
                     bucketiser = Bucketiser()
                     raw_result = bucketiser.process(deviceInfo, device_id, charting_data[tm]['labels'], raw_device_data[1][prop]['values'], prop)
+
                     charting_data[tm][device_id][prop] = []
 
                     for result in raw_result:
                         charting_data[tm][device_id][prop].append(result['results']['result'])
 
-
-    def update(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, write_to_broker:bool=True, force_process:bool=False, force_interday:bool=False):
+                        
+    def update(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, write_to_broker:bool=True, force_process:bool=False, force_interday:bool=False, charting_time:datetime.datetime=None):
 
         update_data = False
         broker = deviceInfo.fiware_wrapper
@@ -280,16 +279,20 @@ class ChartService(unexeaqua3s.service.ServiceBase):
             self.logger.log(inspect.currentframe(), 'Charting Update: ' + deviceInfo.fiware_service)
             t0 = time.perf_counter()
 
+            now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
+
+            if charting_time != None:
+                now = charting_time
+
             fiware_charting_data = self.get_chart_data(deviceInfo)
 
             if fiware_charting_data == []:
-                self.build_from_deviceInfo(deviceInfo)
+                self.build_from_deviceInfo(deviceInfo,now)
                 fiware_charting_data = self.get_chart_data(deviceInfo)
 
             if fiware_charting_data:
                 charting_data = unexeaqua3s.json.loads(fiware_charting_data['status']['value'])['value']
                 # gareth -   do the daily update first
-                now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
 
                 time_diff = (now - unexefiware.time.fiware_to_datetime(charting_data['daily']['timestamp'])).total_seconds() / 60
 
@@ -511,7 +514,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
         self.logger.log(inspect.currentframe(), 'get_sensor_by_properties() - Time Taken: ' + str(time.perf_counter() - t0))
         return data
 
-    def get_time_from(self, time_attribs, starting_date):
+    def get_time_from(self, time_attribs, starting_date:datetime.datetime):
         starting_date = starting_date.replace(hour=0, minute=0, second=0, microsecond=0)
         starting_date = starting_date - datetime.timedelta(days=int(time_attribs['days']))
 
@@ -520,8 +523,12 @@ class ChartService(unexeaqua3s.service.ServiceBase):
 
         return [starting_date, real_end]
 
-    def get_time_attribs(self, label):
+    def get_time_attribs(self, label, current_time:datetime.datetime=None):
         global chart_modes
+        
+        if current_time == None:
+            #GARETH !?!?!?!? - change this for the viz server
+            current_time = datetime.datetime.now()
 
         if label not in chart_modes:
             raise Exception('Unknown mode: ' + str(label))
@@ -534,7 +541,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
         data['mode'] = label
 
         if data['mode'] == 'daily':
-            data['days'] = datetime.datetime.now().hour / 24
+            data['days'] = current_time.hour / 24
             data['timestep_minutes'] = 15
             # data['timestep_minutes'] = 60*4
             data['tick_interval'] = 8
@@ -630,7 +637,9 @@ def testbed(fiware_service):
 
         if key == '1':
             chartingService = unexeaqua3s.service_chart.ChartService()
-            chartingService.build_from_deviceInfo(deviceInfo)
+            now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
+
+            chartingService.build_from_deviceInfo(deviceInfo, now)
 
         if key == '2':
             chartingService = unexeaqua3s.service_chart.ChartService()
@@ -651,7 +660,9 @@ def testbed(fiware_service):
 
         if key == '5':
             chartingService = unexeaqua3s.service_chart.ChartService()
-            chartingService.build_from_deviceInfo(deviceInfo)
+
+            now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
+            chartingService.build_from_deviceInfo(deviceInfo, now)
 
         if key == '9':
             deviceInfo.run()

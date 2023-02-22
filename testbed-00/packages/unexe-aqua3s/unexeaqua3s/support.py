@@ -236,7 +236,7 @@ def on_normaldevice_update(fiware_service):
     except Exception as e:
         print(str(e))
 
-def do_charting(fiware_service, force_interday=False, logger=None):
+def do_charting(fiware_service, force_interday=False, logger=None, charting_time:datetime.datetime=None):
     global device_wrapper
     global alert_wrapper
 
@@ -248,7 +248,7 @@ def do_charting(fiware_service, force_interday=False, logger=None):
     if logger:
         chartingService.logger = logger
 
-    chartingService.update(deviceInfo, write_to_broker=True, force_process=True, force_interday = force_interday)
+    chartingService.update(deviceInfo, write_to_broker=True, force_process=True, force_interday = force_interday, charting_time=charting_time)
 
 def create_alert_settings_from_device_sim_settings(fiware_service):
     deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo(fiware_service, device_wrapper=device_wrapper, other_wrapper=alert_wrapper)
