@@ -1,0 +1,13 @@
+{
+  "strict": false,
+  "esversion": 6,
+  "sub" : true,
+  "-W014": true,
+  "-W069": true,
+  "-W080": true,
+  "-W104": true,
+  "-W117": true,
+  "-W083": true,
+  "-W104": true,
+  "laxcomma" : true
+}

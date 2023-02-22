@@ -49,3 +49,9 @@ testbed-00/broker/venv/
 testbed-00/testbed/.vscode/
 
 *.rpt
+
+testbed-00/aqua3s-visualisation/__pycache__/
+
+testbed-00/aqua3s-visualisation/blueprints/__pycache__/
+
+testbed-00/packages/unexe-aqua3s/tests/prototype-3-testbed/__pycache__/

@@ -1,0 +1,14 @@
+__pycache__
+.pytest_cache
+*.rpt
+*.out
+.DS_Store
+*venv
+.scannerwork
+.vscode
+build
+dist
+epanet_fiware.egg-info
+epanet_fiware/.idea/*
+.idea/*
+config.py

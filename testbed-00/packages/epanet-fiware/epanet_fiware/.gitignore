@@ -1,0 +1,9 @@
+.vscode/
+__pycache__
+.pytest_cache
+outputs/*
+inputs/*
+*.rpt
+*.out
+.idea/
+config.py

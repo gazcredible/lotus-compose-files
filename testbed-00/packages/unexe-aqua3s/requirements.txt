@@ -1,0 +1,16 @@
+webdavclient3
+pyproj
+geopandas==0.10.2
+kml2geojson
+urllib3
+orjson
+requests
+scipy
+scikit-learn
+allagash
+pulp
+multiprocess
+pymoo==0.5.0
+
+./packages/unexefiware-3.0.0.7-py3-none-any.whl
+./packages/epanet_fiware-2.0.0.25-py3-none-any.whl

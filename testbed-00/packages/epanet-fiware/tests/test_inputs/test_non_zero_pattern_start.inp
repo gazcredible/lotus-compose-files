@@ -1,0 +1,183 @@
+[TITLE]
+Test network
+
+[JUNCTIONS]
+;ID              	Elev        	Demand      	Pattern         
+ J0              	710         	               	                	;
+ J1              	710         	150         	                	;
+ J2              	700         	150         	                	;
+ J3              	695         	100         	                	;
+ J4              	700         	150         	                	;
+ J5              	695         	200         	                	;
+ J7              	700         	100         	pattern1           	;
+
+[RESERVOIRS]
+;ID              	Head        	Pattern         
+ R1               	800         	                	;
+
+[TANKS]
+;ID              	Elevation   	InitLevel   	MinLevel    	MaxLevel    	Diameter    	MinVol      	VolCurve        CanOverflow
+ T1               	850         	120         	100         	150         	50.5        	0           	*              No  	;
+
+[PIPES]
+;ID              	Node1           	Node2           	Length      	Diameter    	Roughness   	MinorLoss   	Status
+ P1              	R1              	J0              	10530       	18          	100         	0.01           	Open  	;
+ P2              	J0              	J7              	5280        	14          	100         	0           	CV  	;
+ P3              	J0              	J1              	20           	14          	100         	0           	Closed  ;
+
+
+[PUMPS]
+;ID              	Node1           	Node2           	Parameters
+ pump1              T1               	J0              	HEAD curve_pump	;
+
+[VALVES]
+;ID              	Node1           	Node2           	Diameter    	Type	Setting     	MinorLoss   
+prv                 J0                  J1                  11              PRV     10              0
+psv                 J0                  J2                  12              PSV     11              0
+pbv                 J0                  J3                  13              PBV     12              0.01
+fcv                 J0                  J4                  14              FCV     20              0
+tcv                 J0                  J5                  15              TCV     0.5             0
+
+[TAGS]
+
+[DEMANDS]
+;Junction        	Demand      	Pattern         	Category
+J0                  5               pattern1
+
+[PATTERNS]
+;ID              	Multipliers
+;Demand Pattern
+pattern1               	0         	0        	1         	1         	1         	0         
+pattern1               	0         	0         	0         	0         	0         	0         
+pattern_def            	1.0         	1.2         	1.4         	1.6         	1.4         	1.2         
+pattern_def            	1.0         	0.8         	0.6         	0.4         	0.6         	0.8         
+
+[CURVES]
+;ID              	X-Value     	Y-Value
+curve_pump               	1500        	250        
+curve_gpv               	10        	20     
+
+[CONTROLS]
+
+[RULES]
+
+[ENERGY]
+ Global Efficiency  	75
+ Global Price       	0.0
+ Demand Charge      	0.0
+
+[EMITTERS]
+;Junction        	Coefficient
+J0                  5
+
+[QUALITY]
+;Node            	InitQual
+ J0              	1
+ J1              	2
+ J2              	3
+ J3              	4
+ J4              	5
+ J5              	6
+ J7              	8
+ R1              	9
+ T1               	10
+
+[SOURCES]
+;Node            	Type        	Quality     	Pattern
+R1                  CONCEN          5               pattern1
+J0                  MASS            10
+J1                  SETPOINT        15
+J2                  FLOWPACED       20
+
+[REACTIONS]
+;Type     	Pipe/Tank       	Coefficient
+
+
+[REACTIONS]
+ Order Bulk            	1
+ Order Tank            	1
+ Order Wall            	1
+ Global Bulk           	-.5
+ Global Wall           	-1
+ Limiting Potential    	0.0
+ Roughness Correlation 	0.0
+
+[MIXING]
+;Tank            	Model
+
+[TIMES]
+ Duration           	24:00 
+ Hydraulic Timestep 	1:00 
+ Quality Timestep   	0:05 
+ Pattern Timestep   	2:00 
+ Pattern Start      	2:00 
+ Report Timestep    	1:00 
+ Report Start       	0:00 
+ Start ClockTime    	2 am
+ Statistic          	None
+ Rule Timestep          1:00
+
+[REPORT]
+ STATUS             	NO
+ SUMMARY            	YES
+ MESSAGES               YES
+ ENERGY                 YES
+ NODES                  ALL
+ LINKS                  ALL
+ PAGE               	0
+ DEMANDDEFICIT         YES
+
+[OPTIONS]
+ Units              	CMD
+ Headloss           	H-W
+ Specific Gravity   	1.0
+ Viscosity          	1.0
+ Trials             	40
+ Accuracy           	0.001
+ CHECKFREQ          	2
+ MAXCHECK           	10
+ DAMPLIMIT          	0
+ Unbalanced         	Continue 10
+ Pattern            	pattern_def
+ Demand Multiplier  	1.0
+ Emitter Exponent   	0.5
+ Quality            	Chlorine mg/L
+ Diffusivity        	1.0
+ Tolerance          	0.01
+ DEMAND MODEL           PDA
+ MINIMUM PRESSURE       0
+ REQUIRED PRESSURE      0.1
+ PRESSURE EXPONENT      0.5
+
+[COORDINATES]
+;Node            	X-Coord         	Y-Coord
+ R1              	20.00           	70.00           
+ T1              	30.00           	70.00           
+ J0              	50.00           	70.00           
+ J1              	70.00           	70.00           
+ J2              	30.00           	40.00           
+ J3              	50.00           	40.00           
+ J4              	70.00           	40.00           
+ J5              	30.00           	10.00           
+ J7               	439725           	557002
+
+[VERTICES]
+;Link            	X-Coord         	Y-Coord
+P1                  1                   2
+P1                  2                   3
+pump1               1.1                 2.2
+
+
+[LABELS]
+;X-Coord           Y-Coord          Label & Anchor Node
+ 6.99             73.63            "label1"                 
+ 13.48            68.13            "label2"                 
+ 43.85            91.21            "label3"                 
+
+[BACKDROP]
+ DIMENSIONS     	7.00            	6.00            	73.00           	94.00           
+ UNITS          	None
+ FILE           	
+ OFFSET         	0.00            	0.00            
+
+[END]

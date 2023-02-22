@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block title %}Analytics{% endblock %}
+{% block content %}
+<head>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app/analytics/charting_base.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app/imm/imm_page.js')}}"></script>
+    <script type="text/javascript" src="{{ url_for('static', filename='js/app/imm/imm_screen.js')}}"></script>
+
+
+    <meta charset="utf-8" />
+    <title></title>
+
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css')}}">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=yes" />
+</head>
+<body>
+<script>
+    imm_initialise("{{ access_token }}");
+</script>
+
+</body>
+</html>
+{% endblock %}

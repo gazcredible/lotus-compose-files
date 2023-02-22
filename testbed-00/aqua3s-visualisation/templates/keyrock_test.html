@@ -1,0 +1,68 @@
+{% extends "base.html" %}
+{% block title %}Keyrock Testbed{% endblock %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css')}}">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Controller</title>
+    <style>
+        html, body
+        {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<script>
+    data = {{ payload | safe }};
+
+    document.documentElement.style.overflow = 'hidden';  // firefox, chrome
+    document.body.scroll = "no"; // ie only
+    document.body.style.padding = 0;
+    document.body.style.margin = 0;
+
+    let newIframe = document.createElement('iframe');
+    newIframe.width = '100%';
+    newIframe.height = '100%';
+    newIframe.src = 'about:blank';
+    newIframe.style.overflowY = 'hidden';
+    newIframe.style.overflowX = 'hidden';
+    newIframe.scrolling = 'no';
+
+
+    newIframe.src = '';
+
+
+    let container = document.createElement('div');
+    container.className = 'container-fluid';
+    document.body.appendChild(container);
+
+    let ul = document.createElement('ul');
+    ul.id = "menu";
+    ul.style = "list-style-type: none; margin: 0; padding: 0; overflow: hidden; background-color: #333333; width:100%;";
+    container.appendChild(ul);
+    //ul.className="navbar-nav";
+
+    for(let i=0;i< data['links'].length;i++)
+    {
+        let li = document.createElement('li');
+        ul.appendChild(li);
+        //li.className="nav-item";
+        let a = document.createElement('a');
+        li.appendChild(a);
+        li.style = " float: left; display: block;color: white;text-align: center;padding: 5px 10px;text-decoration: none;cursor: pointer;";
+        a.innerHTML = data['links'][i]['print_name'];
+
+        a.onclick = function ()
+        {
+            newIframe.src = data['links'][i]['link']+'?access_token='+data['links'][i]['access_token'];
+        };
+     }
+
+    let i = 0;
+    newIframe.src = data['links'][i]['link']+'?access_token='+data['links'][i]['access_token'];
+
+    document.body.appendChild(newIframe);
+</script>
+{% endblock %}

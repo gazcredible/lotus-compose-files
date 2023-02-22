@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block title %}Logging{% endblock %}
+{% block content %}
+<head>
+    <meta charset="UTF-8">
+    <link rel="stylesheet" href="{{ url_for('static', filename='bootstrap.css')}}">
+    <meta name="viewport" content="initial-scale=1,maximum-scale=1,user-scalable=no" />
+    <title>Controller</title>
+    <style>
+        html, body
+        {
+            height: 100%;
+            width: 100%;
+        }
+    </style>
+</head>
+<script type="text/javascript"src="{{ url_for('static', filename='js/app/logging/logging.js') }}"></script>
+
+<script>
+    logging_init()
+</script>
+{% endblock %}

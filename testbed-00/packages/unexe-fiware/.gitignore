@@ -1,0 +1,10 @@
+
+.idea/
+
+venv/
+
+.DS_Store
+
+build/
+
+unexefiware.egg-info/

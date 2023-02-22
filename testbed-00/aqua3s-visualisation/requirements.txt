@@ -1,0 +1,13 @@
+Flask
+Flask-Table
+flask-compress
+flask-cors
+waitress
+requests
+requests_oauthlib
+oauthlib
+jenkspy
+
+./packages/epanet_fiware-2.0.0.25-py3-none-any.whl
+./packages/unexefiware-4.0.0.0-py3-none-any.whl
+./packages/unexeaqua3s-4.0.0.5-py3-none-any.whl

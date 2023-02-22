@@ -1,0 +1,17 @@
+stages:
+  - build
+  - test
+
+before_script:
+  - python3 --version
+  - pip3 install --upgrade pip
+  - pip3 install owa_epanet-2.2.1-cp36-cp36m-linux_x86_64.whl
+  - pip3 install -r requirements.txt
+  - cd epanet_fiware
+
+flake8:
+  tags:
+    - ci
+  stage: build
+  script:
+    - flake8 --max-line-length=80
