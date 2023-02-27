@@ -236,18 +236,21 @@ def get_epanomaly_settings():
                     record['xaxis-labels'].append([str(week_time)])
                     average.append(avg_value)
 
-                    date += datetime.timedelta(minutes=15)
+                    date += datetime.timedelta(minutes=60)
 
                     in_range = not (date.day > 13)
 
                 record['series'].append({'name': 'mean', 'data': average})
 
                 record['y_plotlines'] = [];
-                record['y_plotlines'].append({'color': '#FF0000','width': 2,'value': float(device.alertsetting_get_entry('current_max'))})
-                record['y_plotlines'].append({'color': '#FF00FF', 'width': 2, 'value': float(device.alertsetting_get_entry('current_min'))})
+                if device.alertsetting_get_entry('current_max') is not None:
+                    record['y_plotlines'].append({'color': '#FF0000','width': 2,'value': float(device.alertsetting_get_entry('current_max'))})
 
-                charting_support.add_value(device.alertsetting_get_entry('current_max'),is_limit=True)
-                charting_support.add_value(device.alertsetting_get_entry('current_min'), is_limit=True)
+                if device.alertsetting_get_entry('current_min') is not None:
+                    record['y_plotlines'].append({'color': '#FF00FF', 'width': 2, 'value': float(device.alertsetting_get_entry('current_min'))})
+
+                #charting_support.add_value(device.alertsetting_get_entry('current_max'),is_limit=True)
+                #charting_support.add_value(device.alertsetting_get_entry('current_min'), is_limit=True)
 
                 record['graph_range'] = charting_support.get_range()
 

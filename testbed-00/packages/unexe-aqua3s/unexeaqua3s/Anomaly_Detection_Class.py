@@ -549,8 +549,7 @@ class AnomalyDetection_Model:
                       leakEmitter: Optional[float] = 0,
                       min_leak_lps: Optional[float] = 0.75,
                       max_leak_lps: Optional[float] = 2,
-                      #stepDuration: Optional[int] = 15 * 60,
-                      stepDuration: Optional[int] = 60 * 60,
+                      stepDuration: Optional[int] = 15 * 60,
                       simulation_date: Optional[datetime.datetime] = datetime.datetime(2021, 1, 1)
                       ):
         if training_dataset == True:

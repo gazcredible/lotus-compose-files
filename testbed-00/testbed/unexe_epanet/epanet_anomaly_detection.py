@@ -1,3 +1,4 @@
+import os
 import unexefiware.base_logger
 import unexe_epanet.epanet_model
 import anomalies.Anomaly_Detection_Class
@@ -41,13 +42,13 @@ class epanet_anomaly_detection:
         self.model_data = self.model_data[['timestamp', 'Sensor_ID', 'Read_avg', 'Read_std']]
         self.model_data = self.model_data.groupby(['timestamp', 'Sensor_ID'], as_index=False).last()
 
-    def save_anomaly_data(self, path_root):
+    def save_anomaly_data(self, sim_inst:unexe_epanet.epanet_model, path_root:str):
         try:
             unexefiware.file.buildfilepath(path_root)
-            self.model_data.to_pickle(path_root+"avg_values.pickle")
+            self.model_data.to_pickle(path_root+os.sep+sim_inst.fiware_service + "_avg_values.pickle")
 
-            with open(path_root+'avg_values' + '.json', 'w') as f:
-                f.write(json.dumps(self.model_data.to_json()))
+            with open(path_root+os.sep+sim_inst.fiware_service + '_avg_values' + '.json', 'w') as f:
+                f.write(self.model_data.to_json())
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(), e)

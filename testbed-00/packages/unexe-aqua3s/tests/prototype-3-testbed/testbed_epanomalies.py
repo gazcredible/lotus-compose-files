@@ -39,6 +39,7 @@ def testbed(fiware_service):
         print('1..Run process on device:' + device_id)
         print('2..Run process on pilot:' + fiware_service)
 
+        print('10..Create avg_values data:' + fiware_service)
         print('11..Build anomaly data for epanet devices:' + fiware_service)
 
         print('99..Update Visualiser:' + fiware_service)
@@ -57,6 +58,9 @@ def testbed(fiware_service):
                 device = deviceInfo.deviceModelList[label]
 
                 epanomalies.process_device(deviceInfo, device)
+
+        if key == '10':
+            pass
 
         if key == '11':
             #go through all the epanet devices and build anomaly data from the avg_values_DB

@@ -32,6 +32,15 @@ if 'DEVICE_BROKER' not in os.environ:
 
         path = '/docker/lotus-visualiser-local-bench/'
 
+        if platform.system().lower() == 'windows':
+            os.environ['FILE_PATH'] = 'c:' + path
+        else:
+            os.environ['FILE_PATH'] = path
+
+        os.environ['PILOTS'] = 'GUW'
+        os.environ['LOAD_LOCAL_ANOMALY_DATA'] = 'True'
+        os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'] = os.environ['FILE_PATH']
+
     if target_enviroment == 'local.docker':
         #this is my local daocker install on localhost
         ip = 'http://0.0.0.0'

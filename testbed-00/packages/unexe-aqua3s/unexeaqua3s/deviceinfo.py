@@ -72,8 +72,13 @@ class DeviceSmartModel:
         return False
 
     def EPANET_id(self) -> str:
-        if self.isEPANET():
-            return self.model['epanet_reference']['value']
+        try:
+            # GARETH - this wasn't right, value is a str(json)
+            if self.isEPANET():
+                if isinstance(self.model['epanet_reference']['value'], str):
+                    return unexeaqua3s.json.loads(self.model['epanet_reference']['value'])['epanet_id']
+        except Exception as e:
+            return None
 
         return None
 
@@ -109,12 +114,14 @@ class DeviceSmartModel:
 
         return invalid_string
 
-    def _get(self, label: str) -> str:
+    def _get(self, label: str) -> dict:
         try:
             if label in self.model:
                 data = self.model[label]
                 if data != None and 'value' in data and len(data['value']) > 0:
                     return unexeaqua3s.json.loads(data['value'])
+
+                return {}  # GARETH - build from scratch?
 
         except Exception as e:
             if logger:
@@ -326,8 +333,12 @@ class DeviceSmartModel:
     def property_observedAt(self, prop: str = 'value') -> str:
         if prop in self.model:
             return self.model[prop]['observedAt']
-        else:
-            return invalid_string
+
+        if 'controlledProperty' in self.model and isinstance(self.model['controlledProperty']['value'], str):
+            prop = self.model['controlledProperty']['value']
+            return self.model[prop]['observedAt']
+
+        return invalid_string
 
     def property_observedAt_prettyprint(self, prop: str = 'value') -> str:
         if self.property_observedAt(prop) is not invalid_string:
@@ -695,7 +706,7 @@ class DeviceSmartModel:
         return self._isTriggered(epanomaly_status_label)
 
     def epanomaly_observedAt_prettyprint(self) -> str:
-        return self._observedAt_prettyprint(epanomaly_status_label)
+        return self._observedAt_prettyprint()
 
     def epanomaly_observedAt(self) -> str:
         return self.property_observedAt()
@@ -772,7 +783,7 @@ class DeviceSmartModel:
         if self.isEPANET():
             status = self._get(label)
 
-            if status:
+            if status is not None:
                 if 'triggered' not in status:
                     status['triggered'] = str(False)
 

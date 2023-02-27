@@ -177,6 +177,12 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         record['epanet_reference']['type'] = 'Property'
         record['epanet_reference']['value'] = json.dumps({})
 
+        #GARETH - these are for epanet anomalies,
+        # so need to think about how we indicate these are added,
+        # are all the sensors EPA at this point? - I think so
+        record['epanomaly_setting'] = {'type': 'Property', 'value': ''}
+        record['epanomaly_status'] = {'type': 'Property', 'value': ''}
+
         return record
 
     def get_deviceid_from_definition(self, sensor_name):

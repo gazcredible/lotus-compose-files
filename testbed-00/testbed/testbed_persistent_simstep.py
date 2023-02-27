@@ -77,7 +77,7 @@ def sim_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
 
             sim_inst.simulate(time_steps)
 
-def anomaly_management(sim_inst:models.Aqua3S_Fiware):
+def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
     quitApp = False
     while quitApp is False:
         print('\n')
@@ -86,7 +86,7 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware):
         print('Sim step: ' + str(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step())) + 'min')
 
         print('\n')
-
+        print('1..Build Anomaly Detection Data')
         print('X..Back')
         print('\n')
 
@@ -94,6 +94,14 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware):
 
         if key == 'x':
             quitApp = True
+
+        if key == '1':
+            print('Build Detection Data')
+            ad = unexe_epanet.epanet_anomaly_detection.epanet_anomaly_detection()
+            ad.inp_file = sim_inst.inp_file
+            ad.build_anomaly_data(fiware_service= sim_inst.fiware_service, sensors=sensor_list, leak_node_ids=None)
+            ad.save_anomaly_data(sim_inst, os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'])
+
 
 
 def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
@@ -143,5 +151,5 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
             testbed_fiware.sim_leak_management(sim_inst, fiware_wrapper)
 
         if key == '3':
-            anomaly_management(sim_inst)
+            anomaly_management(sim_inst, sensor_list)
 

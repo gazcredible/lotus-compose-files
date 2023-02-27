@@ -31,36 +31,39 @@ class EPAnomalies:
 
     def load_data(self):
 
-        if False:
+        if os.environ['LOAD_LOCAL_ANOMALY_DATA'].lower() == 'true':
             try:
                 path_root = os.environ['FILE_PATH'] + os.sep + os.environ['FILE_VISUALISER_FOLDER'] + os.sep + 'data' + os.sep + self.fiware_service + os.sep + 'epanet_anomaly'
-                self.anomaly_modelData['avg_values_DB'] = pandas.read_pickle(path_root + os.sep + "avg_values")
+
+                path_root = os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH']
+
+                self.anomaly_modelData['avg_values_DB'] = pandas.read_pickle(path_root + os.sep + self.fiware_service+"_avg_values.pickle")
             except Exception as e:
                 self.logger.exception(inspect.currentframe(),e)
-
-        try:
-            webdav_options = {
-                'webdav_hostname': os.environ['WEBDAV_URL'],
-                'webdav_login': os.environ['WEBDAV_NAME'],
-                'webdav_password': os.environ['WEBDAV_PASS']
-            }
-
-            file_path = 'kr_10' + os.sep + 'data' + os.sep + self.fiware_service + os.sep + 'epanet_anomaly' + os.sep + "avg_values"
-
-            webdav = unexeaqua3s.webdav.webdav(options=webdav_options)
-
-            #webdav.print_remote_tree(root='/')
+        else:
             try:
-                info = webdav.client.resource(file_path)
-                buffer = io.BytesIO()
-                info.write_to(buffer)
-                buffer.seek(0,0)
-                self.anomaly_modelData['avg_values_DB'] = pandas.read_pickle(buffer)
-            except Exception as e:
-                pass
+                webdav_options = {
+                    'webdav_hostname': os.environ['WEBDAV_URL'],
+                    'webdav_login': os.environ['WEBDAV_NAME'],
+                    'webdav_password': os.environ['WEBDAV_PASS']
+                }
 
-        except Exception as e:
-            self.logger.exception(inspect.currentframe(),e)
+                file_path = 'kr_10' + os.sep + 'data' + os.sep + self.fiware_service + os.sep + 'epanet_anomaly' + os.sep + "avg_values"
+
+                webdav = unexeaqua3s.webdav.webdav(options=webdav_options)
+
+                #webdav.print_remote_tree(root='/')
+                try:
+                    info = webdav.client.resource(file_path)
+                    buffer = io.BytesIO()
+                    info.write_to(buffer)
+                    buffer.seek(0,0)
+                    self.anomaly_modelData['avg_values_DB'] = pandas.read_pickle(buffer)
+                except Exception as e:
+                    pass
+
+            except Exception as e:
+                self.logger.exception(inspect.currentframe(),e)
 
     def process_device(self, fiware_service:str, device:unexeaqua3s.deviceinfo.DeviceSmartModel):
         try:
@@ -70,51 +73,61 @@ class EPAnomalies:
 
                 if device.epanomalystatus_is_valid() == True:
                     device_id_simple = device.EPANET_id()
-                    avg_valuesDB = self.anomaly_modelData['avg_values_DB'][self.anomaly_modelData['avg_values_DB'].Sensor_ID == device_id_simple]
-
-                    alpha = 0.9
-                    L = 5.4
-                    threshold = L * ((alpha / (2 - alpha)) ** 0.5)
 
                     if device.epanomalysetting_is_valid() == False:
                         device.epanomalysetting_set_with_defaults(fiware_service)
                         # GARETH - Brett said to do this
+
+                    else:
                         current_ewma = 0
-                    else:
-                        prev_ewma = float(device.epanomalysetting_get_entry('ewma_value'))
-                        next_read = float(device.property_value())
 
-                        current_ewma = self.calc_ewma(device.property_observedAt(), next_read, prev_ewma, alpha, avg_valuesDB)
+                        try:
+                            avg_valuesDB = self.anomaly_modelData['avg_values_DB'][self.anomaly_modelData['avg_values_DB'].Sensor_ID == device_id_simple]
 
-                    if abs(current_ewma) > threshold:
-                        # print(current_ewma)
-                        triggered = 'True'  # i.e. an alarm
-                        reason = 'Surpasses_Threshold'
-                        reason += ' cur.reading: '+ str(round(next_read,2) )
-                        reason += ' prev ewma: ' + str(round(prev_ewma,2))
-                        reason += ' curr. ewma: ' +str(round(current_ewma,2))
-                        reason += ' thresh: ' +str(round(threshold,2))
-                    else:
-                        triggered = 'False'
-                        reason = 'None'
+                            alpha = 0.9
+                            L = 5.4
+                            threshold = L * ((alpha / (2 - alpha)) ** 0.5)
 
-                    if device.epanomalysetting_get_entry('fudge_state') == 'True':
-                        triggered = 'True'
-                        reason = 'Outside of Limits by fudge_state'
+                            prev_ewma = float(device.epanomalysetting_get_entry('ewma_value'))
+                            next_read = float(device.property_value())
 
-                    #debug info
-                    reason += ' ' + str(datetime.datetime.utcnow().replace(microsecond=0))
+                            prop = device.model['controlledProperty']['value']
 
-                    device.epanomalystatus_set_entry('triggered', str(triggered))
-                    device.epanomalystatus_set_entry('reason', str(reason))
+                            current_ewma = self.calc_ewma(device.property_observedAt(prop), next_read, prev_ewma, alpha, avg_valuesDB)
 
-                    device.epanomalysetting_set_entry('ewma_value', str(current_ewma))
-                    device.epanomalysetting_set_entry('threshold', str(threshold))
+                            if abs(current_ewma) > threshold:
+                                # print(current_ewma)
+                                triggered = 'True'  # i.e. an alarm
+                                reason = 'Surpasses_Threshold'
+                                reason += ' cur.reading: '+ str(round(next_read,2) )
+                                reason += ' prev ewma: ' + str(round(prev_ewma,2))
+                                reason += ' curr. ewma: ' +str(round(current_ewma,2))
+                                reason += ' thresh: ' +str(round(threshold,2))
+                            else:
+                                triggered = 'False'
+                                reason = 'None'
+
+                            if device.epanomalysetting_get_entry('fudge_state') == 'True':
+                                triggered = 'True'
+                                reason = 'Outside of Limits by fudge_state'
+
+                            #debug info
+                            reason += ' ' + str(datetime.datetime.utcnow().replace(microsecond=0))
+
+                            print(device.get_id() + ' ' + reason)
+
+                            device.epanomalystatus_set_entry('triggered', str(triggered))
+                            device.epanomalystatus_set_entry('reason', str(reason))
+
+                            device.epanomalysetting_set_entry('ewma_value', str(current_ewma))
+                            device.epanomalysetting_set_entry('threshold', str(threshold))
+                        except Exception as e:
+                            self.logger.exception(inspect.currentframe(), e)
 
                     device.epanomalystatus_patch(fiware_service)
                     device.epanomalysetting_patch(fiware_service)
 
-                    print(device.get_id() + ' ' + reason)
+
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
 
