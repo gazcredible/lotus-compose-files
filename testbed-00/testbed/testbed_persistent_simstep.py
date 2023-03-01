@@ -1,3 +1,5 @@
+import gc
+
 import local_environment_settings
 import os
 
@@ -9,6 +11,10 @@ import unexe_epanet.epanet_fiware
 import unexewrapper
 import testbed_fiware
 import models
+
+import unexe_epanet.epanet_anomaly_detection
+import unexe_epanet.epanet_anomaly_localisation
+import gc
 
 
 #GARETH - persistent simstep means that we need to run the sim from in here and do other stuff (from in here)
@@ -87,6 +93,8 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
 
         print('\n')
         print('1..Build Anomaly Detection Data')
+        print('2..Build Anomaly Localisation Data')
+        print('3..Run Anomaly Localisation')
         print('X..Back')
         print('\n')
 
@@ -102,6 +110,21 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
             ad.build_anomaly_data(fiware_service= sim_inst.fiware_service, sensors=sensor_list, leak_node_ids=None)
             ad.save_anomaly_data(sim_inst, os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'])
 
+        if key == '2':
+            print('Build Localisation Data')
+            al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
+            al.init(sim_inst,sensor_list)
+            al.build_datasets()
+
+        if key == '3':
+            print('Run Anomaly Localisation')
+            al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
+            al.init(sim_inst, sensor_list)
+            al.load_datasets()
+            al.anomaly_localisation.ML_buildModel()
+            al.sim_leak()
+            al = None
+            gc.collect()
 
 
 def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):

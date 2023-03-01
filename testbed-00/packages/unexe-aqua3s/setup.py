@@ -10,7 +10,7 @@ with open('unexeaqua3s/README.md', 'r', encoding='utf-8') as fh:
 
 setuptools.setup(
     name='unexeaqua3s',
-    version='4.0.0.7',
+    version='4.0.0.8',
     author='Example Author',
     author_email='author@example.com',
     description='A small example package',

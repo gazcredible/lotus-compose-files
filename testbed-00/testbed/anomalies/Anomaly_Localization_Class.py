@@ -73,14 +73,16 @@ class AnomalyLocalization():
             self.sim_leak_all_nodes(stepDuration = stepDuration,
                                     simulation_date = simulation_date,
                                     sigma = noise_sensor,
-                                    leak_nodes = leak_nodes)
+                                    leak_nodes = leak_nodes,
+                                    repeats=22)
         if testing_dataset == True:
             print("building leak testing dataset")
             self.sim_random_leaks(nodes=testleaks,
                                   simulation_date = simulation_date,
                                   stepDuration=stepDuration,
                                   sigma=noise_sensor,
-                                  leak_nodes = leak_nodes)
+                                  leak_nodes = leak_nodes,
+                                  repeats=10)
 
     def sim_no_leak(self,
                     stepDuration: Optional[int] = 15 * 60,

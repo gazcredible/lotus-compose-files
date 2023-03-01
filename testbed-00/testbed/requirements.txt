@@ -1,5 +1,7 @@
+pandas==1.4.2
+geopandas==0.10.2
 ./packages/epanet_fiware-2.0.0.25-py3-none-any.whl
-./packages/unexeaqua3s-4.0.0.6-py3-none-any.whl
+./packages/unexeaqua3s-4.0.0.8-py3-none-any.whl
 ./packages/unexefiware-4.0.0.0-py3-none-any.whl
 
 scikit-learn
