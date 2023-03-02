@@ -19,7 +19,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
         super().__init__()
 
         self.fiware_service = ''
-        self.value_dp = 3
+        self.value_dp = 10 #GARETH - needs to be big for EWMA to work properly ;)
 
         self.link_property_lookups = {}
         self.link_property_lookups['flow'] = {'label': en.FLOW, 'unitcode': 'G51'}
@@ -142,7 +142,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
             device[property_label] = {}
 
         device[property_label]['type'] = 'Property'
-        device[property_label]['value'] = str(round(property_value, self.value_dp))
+        device[property_label]['value'] = str(property_value)
         device[property_label]['observedAt'] = fiware_time
         device[property_label]['unitCode'] = property_unitcode
 

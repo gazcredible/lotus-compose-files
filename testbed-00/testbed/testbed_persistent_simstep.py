@@ -136,11 +136,17 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
         pipes = ['GP1', 'GP585', '6', 'GP269', 'GP544', '2', 'GP523', 'GP453']
         juncs = ['GJ409', 'GJ507', 'GJ533', 'GJ525','GJ258', 'GJ379', 'GJ397']
 
-        for pipe in pipes:
-            sensor_list.append({'ID': pipe, 'Type': 'flow'})
 
-        for junc in juncs:
-            sensor_list.append({'ID': junc, 'Type': 'pressure'})
+        juncs = None
+        pipes = ['GP1']
+
+        if pipes:
+            for pipe in pipes:
+                sensor_list.append({'ID': pipe, 'Type': 'flow'})
+
+        if juncs:
+            for junc in juncs:
+                sensor_list.append({'ID': junc, 'Type': 'pressure'})
 
 
     #GARETH don't set this, see fn() notes

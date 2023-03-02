@@ -298,15 +298,19 @@ class DeviceSmartModel:
 
         return unexefiware.units.get_property_unitcode_printname(self.property_unitCode(prop))
 
-    def property_value(self, prop: str = None):
+    def property_value(self, prop: str = None, dp:int = None) ->str:
 
         if prop == None:
             prop = self.property_get()
 
-        dp = self.property_get_dp(prop)
+        if dp is None:
+            dp = self.property_get_dp(prop)
 
-        if 'value' in self.model:
-            value = self.model['value']['value']
+        if prop in self.model:
+            value = self.model[prop]['value']
+
+            if dp ==-1:
+                return value
 
             if isinstance(value, str):
                 value = float(value)

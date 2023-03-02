@@ -34,8 +34,9 @@ class epanet_anomaly_detection:
 
         self.anomaly_detection.build_dataset(leakEmitter=5,
                            testing_dataset=False,
-                           leaks_simulated=100, #max value
+                           leaks_simulated=100, #max value?
                            noise_sensor=0.0000001,
+                           stepDuration= 60 * 60, #GARETH - GUW is on a 60 min step
                            leak_nodes=self.leak_nodes)
 
         self.model_data = self.anomaly_detection.dataSimulation['train_noleak']['noleakDB']

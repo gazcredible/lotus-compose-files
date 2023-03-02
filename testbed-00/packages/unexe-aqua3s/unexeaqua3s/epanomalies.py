@@ -76,10 +76,9 @@ class EPAnomalies:
 
                     if device.epanomalysetting_is_valid() == False:
                         device.epanomalysetting_set_with_defaults(fiware_service)
-                        # GARETH - Brett said to do this
 
-                    else:
-                        current_ewma = 0
+                    if device.epanomalysetting_is_valid() == True:
+                        prop = device.model['controlledProperty']['value']
 
                         try:
                             avg_valuesDB = self.anomaly_modelData['avg_values_DB'][self.anomaly_modelData['avg_values_DB'].Sensor_ID == device_id_simple]
@@ -89,20 +88,22 @@ class EPAnomalies:
                             threshold = L * ((alpha / (2 - alpha)) ** 0.5)
 
                             prev_ewma = float(device.epanomalysetting_get_entry('ewma_value'))
-                            next_read = float(device.property_value())
+                            next_read = float(device.property_value(prop, dp=-1))
 
-                            prop = device.model['controlledProperty']['value']
+                            ewma_result = self.calc_ewma(device.property_observedAt(prop), next_read, prev_ewma, alpha, avg_valuesDB)
 
-                            current_ewma = self.calc_ewma(device.property_observedAt(prop), next_read, prev_ewma, alpha, avg_valuesDB)
-
-                            if abs(current_ewma) > threshold:
-                                # print(current_ewma)
+                            if abs(ewma_result[0]) > threshold:
                                 triggered = 'True'  # i.e. an alarm
                                 reason = 'Surpasses_Threshold'
-                                reason += ' cur.reading: '+ str(round(next_read,2) )
+                                reason += ' cur.reading: '+ str(next_read)
                                 reason += ' prev ewma: ' + str(round(prev_ewma,2))
-                                reason += ' curr. ewma: ' +str(round(current_ewma,2))
+                                reason += ' curr. ewma: ' +str(round(ewma_result[0],2))
                                 reason += ' thresh: ' +str(round(threshold,2))
+                                reason += ' av: ' +str(ewma_result[1])
+                                reason += ' SD: ' + str(ewma_result[2])
+
+                                reason += ' min: ' + str(ewma_result[1] - ewma_result[2])
+                                reason += ' max: ' + str(ewma_result[1] + ewma_result[2])
                             else:
                                 triggered = 'False'
                                 reason = 'None'
@@ -119,10 +120,12 @@ class EPAnomalies:
                             device.epanomalystatus_set_entry('triggered', str(triggered))
                             device.epanomalystatus_set_entry('reason', str(reason))
 
-                            device.epanomalysetting_set_entry('ewma_value', str(current_ewma))
+                            device.epanomalysetting_set_entry('ewma_value', str(ewma_result[0]))
                             device.epanomalysetting_set_entry('threshold', str(threshold))
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
+
+                    print('Data:' + str(device.property_observedAt(prop)) + ' ' + str(device.property_value(prop)))
 
                     device.epanomalystatus_patch(fiware_service)
                     device.epanomalysetting_patch(fiware_service)
@@ -168,9 +171,11 @@ class EPAnomalies:
         #get std
         std_value = avg_valuesDB.Read_std[avg_valuesDB.timestamp == week_time]
         std_value = std_value.iloc[0]
-        z = (current_value - avg_value)/std_value
+
+        diff = current_value - avg_value
+        z = diff / std_value
         ewma = (1 - alpha) * prev_ewma + alpha * z
-        return ewma
+        return (ewma, avg_value, std_value)
 
 
     def build_anomaly_settings(self, fiware_service:str):

@@ -69,7 +69,8 @@ class AnomalyDetection_Model:
         self.model.set_time_param(enu.TimeParams.Duration, duration)  # set simulation duration for 15 days
         self.model.set_time_param(enu.TimeParams.HydStep, stepDuration)  # set hydraulic time step to 15min
         self.model.set_time_param(enu.TimeParams.ReportStep, stepDuration)  # set reporting time step to 15min
-        self.model.set_epanet_mode(enu.EpanetModes.PDA)  # set demand mode
+        #GARETH
+        # self.model.set_epanet_mode(enu.EpanetModes.PDA)  # set demand mode
         en.openH(self.model.proj_for_simulation)
         en.initH(self.model.proj_for_simulation, en.NOSAVE)
         old_date = simulation_date.date()
@@ -226,7 +227,9 @@ class AnomalyDetection_Model:
         self.model.set_time_param(enu.TimeParams.Duration, (duration))  # set simulation duration for 15 days
         self.model.set_time_param(enu.TimeParams.HydStep, (stepDuration))  # set hydraulic time step to 15min
         self.model.set_time_param(enu.TimeParams.ReportStep, (stepDuration))  # set reporting time step to 15min
-        self.model.set_epanet_mode(enu.EpanetModes.PDA)  # set demand mode
+        #GARETH
+        # self.model.set_epanet_mode(enu.EpanetModes.PDA)  # set demand mode
+
         #run simulation step-by-step
         en.openH(self.model.proj_for_simulation)
         en.initH(self.model.proj_for_simulation, en.NOSAVE)
@@ -549,8 +552,7 @@ class AnomalyDetection_Model:
                       leakEmitter: Optional[float] = 0,
                       min_leak_lps: Optional[float] = 0.75,
                       max_leak_lps: Optional[float] = 2,
-                      #stepDuration: Optional[int] = 15 * 60,
-                      stepDuration: Optional[int] = 60 * 60,
+                      stepDuration: Optional[int] = 15 * 60,
                       simulation_date: Optional[datetime.datetime] = datetime.datetime(2021, 1, 1)
                       ):
         if training_dataset == True:
