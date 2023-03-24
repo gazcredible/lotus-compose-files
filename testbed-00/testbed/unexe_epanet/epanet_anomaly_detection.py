@@ -25,19 +25,25 @@ class epanet_anomaly_detection:
 
         self.build_anomaly_data(sensors, leakNodeIDs)
 
-    def build_anomaly_data(self, fiware_service:str, sensors:list, leak_node_ids:list):
+    def build_anomaly_data(self, fiware_service:str, sensors:list, leak_node_ids:list, simulation_start:datetime.datetime):
         self.sensors = sensors
         self.leak_nodes = leak_node_ids
         self.anomaly_detection = anomalies.Anomaly_Detection_Class.AnomalyDetection_Model(inp_file=self.inp_file, network_name=fiware_service, sensors=sensors)
 
         self.anomaly_detection.get_sensor_indices()
 
-        self.anomaly_detection.build_dataset(leakEmitter=5,
-                           testing_dataset=False,
-                           leaks_simulated=100, #max value?
-                           noise_sensor=0.0000001,
-                           stepDuration= 60 * 60, #GARETH - GUW is on a 60 min step
-                           leak_nodes=self.leak_nodes)
+        step_duration_as_minutes = 15
+
+        if fiware_service == 'GUW':
+            step_duration_as_minutes = 60
+        self.anomaly_detection.build_dataset(simulation_date = simulation_start,
+                                             stepDuration=step_duration_as_minutes * 60,  # GARETH - GUW is on a 60 min step, stepDuration is in SECONDS!
+                                             leakEmitter=5,
+                                             testing_dataset=False,
+                                             leaks_simulated=100,  #max value?
+                                             noise_sensor=0.0000001,
+                                             leak_nodes=self.leak_nodes,
+                                             )
 
         self.model_data = self.anomaly_detection.dataSimulation['train_noleak']['noleakDB']
         self.model_data = self.model_data[['timestamp', 'Sensor_ID', 'Read_avg', 'Read_std']]

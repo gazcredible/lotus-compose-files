@@ -60,11 +60,16 @@ class AnomalyDetection_Model:
         return df
 
     def sim_noleak_steps(self,
-                    stepDuration: Optional[int] = 15*60,
-                    simulation_date: Optional[datetime.datetime] = datetime.datetime(2021,1,1),
+                    stepDuration:int,
+                    simulation_date:datetime.datetime,
                     duration: Optional[int] = 26*7 * 24 * 60 * 60,  # 1 year
                     sigma: Optional[float] = 0.5
                     ):
+
+        #shorten sim durination to 1 week in seconds
+        #except it wont work as the read_std & z calculations fail with n=1
+        duration = 2*7 * 24 *60 * 60
+
         start_time = datetime.datetime.now()
         self.model.set_time_param(enu.TimeParams.Duration, duration)  # set simulation duration for 15 days
         self.model.set_time_param(enu.TimeParams.HydStep, stepDuration)  # set hydraulic time step to 15min
@@ -74,11 +79,13 @@ class AnomalyDetection_Model:
         en.openH(self.model.proj_for_simulation)
         en.initH(self.model.proj_for_simulation, en.NOSAVE)
         old_date = simulation_date.date()
-        if self.network_name != "TTT":
+        if self.network_name != "TTT" or True:
             self.add_demand_noise2()
         #en.saveinpfile(self.model.proj_for_simulation, "testinp")
 
-        t = en.nextH(self.model.proj_for_simulation)
+        #GARETH - Don't do this as it offsets everything by 1 step
+        #t = en.nextH(self.model.proj_for_simulation)
+        t = 1
         rows = []
         while t > 0:
             en.runH(self.model.proj_for_simulation)
@@ -87,6 +94,7 @@ class AnomalyDetection_Model:
             report_date = report_time.date()
             report_step = hyd_sim_seconds / stepDuration
             t = en.nextH(self.model.proj_for_simulation)
+
             # get sensor data
             for sensor in self.sensors:
                 if sensor['Type'] == 'pressure':
@@ -96,11 +104,13 @@ class AnomalyDetection_Model:
                 if sensor['Type'] == 'flow':
                     read = en.getlinkvalue(self.model.proj_for_simulation, sensor['Index'], en.FLOW)
                     rows.append([report_step, report_time, sensor['ID'], sensor['Type'], read])
+
             # add noise via patterns for every 24 hours / new date
             if old_date != report_date:
-                if self.network_name != "TTT":
+                if self.network_name != "TTT" or True:
                     self.add_demand_noise2()
                 old_date = report_date
+
         en.close(self.model.proj_for_simulation)
         self._epanetmodel()
         df = pd.DataFrame(rows, columns=['ReportStep', 'ReportTime', 'Sensor_ID', 'Sensor_type', 'Read'])
@@ -130,8 +140,8 @@ class AnomalyDetection_Model:
 
 
     def sim_noleaks(self,
-                    stepDuration: Optional[int] = 15*60,
-                    simulation_date: Optional[datetime.datetime] = datetime.datetime(2021,1,1),
+                    stepDuration:int,
+                    simulation_date:datetime.datetime,
                     duration: Optional[int] = 7 * 24 * 60 * 60,  # 1 year
                     sigma: Optional[float] = 0.5
                     ):
@@ -348,12 +358,12 @@ class AnomalyDetection_Model:
         return leak_df
 
     def sim_leaks(self,
+                  simulation_date:datetime.datetime,
+                  stepDuration:int,
                    leaks_simulated: int,
                    leak_nodes = None,
                    leakEmitter: Optional[float] = 0,
                    duration: Optional[int]=11*24*60*60,
-                   stepDuration: Optional[int] = 15 * 60,
-                   simulation_date: Optional[datetime.datetime] = datetime.datetime(2021, 1, 1),
                    sigma: Optional[float] = 0.5,
                    min_leak_lps: Optional[float] = 0.5,
                    max_leak_lps: Optional[float] = 1.25,
@@ -544,6 +554,8 @@ class AnomalyDetection_Model:
         print("The average detection time in seconds is: ", avg_detectionTime)
 
     def build_dataset(self,
+                      simulation_date:datetime.datetime,
+                      stepDuration:int,
                       leak_nodes = None,
                       training_dataset: Optional[bool] =True,
                       testing_dataset: Optional[bool] = True,
@@ -552,9 +564,9 @@ class AnomalyDetection_Model:
                       leakEmitter: Optional[float] = 0,
                       min_leak_lps: Optional[float] = 0.75,
                       max_leak_lps: Optional[float] = 2,
-                      stepDuration: Optional[int] = 15 * 60,
-                      simulation_date: Optional[datetime.datetime] = datetime.datetime(2021, 1, 1)
                       ):
+
+        print('Step Duration: ' + str(stepDuration/60))
         if training_dataset == True:
             #no leak data
             print("building no leak dataset")
@@ -570,9 +582,10 @@ class AnomalyDetection_Model:
             #leak data
             print("building leak dataset")
 
-            self.dataSimulation['train_leaks'] = self.sim_leaks(leaks_simulated=leaks_simulated,
-                                                               leakEmitter = leakEmitter,
-                                                                stepDuration = stepDuration,
+            self.dataSimulation['train_leaks'] = self.sim_leaks(simulation_date=simulation_date,
+                                                                stepDuration=stepDuration,
+                                                                leaks_simulated=leaks_simulated,
+                                                                leakEmitter = leakEmitter,
                                                                 sigma= noise_sensor,
                                                                 min_leak_lps = min_leak_lps,
                                                                 max_leak_lps = max_leak_lps,

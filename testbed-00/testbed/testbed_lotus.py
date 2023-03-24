@@ -50,6 +50,12 @@ def load_epanet_model(fiware_service:str) -> models.Aqua3S_Fiware:
         coord_system = pyproj.CRS.from_epsg(32632)
         sim_model.init(epanet_file=inp_file, coord_system=coord_system, fiware_service=fiware_service, flip_coordindates=True)
 
+    if fiware_service == 'TTT':
+        inp_file = 'local_data' + os.sep+'bretts-imm-epanet.inp'
+        coord_system = pyproj.CRS.from_epsg(32632)
+        sim_model.init(epanet_file=inp_file, coord_system=coord_system, fiware_service=fiware_service, flip_coordindates=True)
+
+
     if fiware_service == 'GUW':
         coord_system = pyproj.CRS.from_epsg(32646)
         inp_file = 'local_data' + os.sep+'KMKHYA_GHY_WDN_24.inp'
@@ -70,7 +76,8 @@ def testbed():
 
     # GARETH - choose epanet location here ...
     fiware_service = 'GUW'
-    # fiware_service = 'AAA'
+    fiware_service = 'AAA'
+    fiware_service = 'TTT'
 
     sensor_list = []
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0, minute=0, second=0)

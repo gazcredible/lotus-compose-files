@@ -363,6 +363,9 @@ def get_is_epanet_available(access_token):
         if access_token == 'GUW':
             return True
 
+        if access_token == 'TTT':
+            return True
+
 
         return False
 
@@ -404,6 +407,7 @@ pilot_functionality_lookup['VVQ'] = {'epanomalies': 'false', 'devices': 'true', 
 pilot_functionality_lookup['BDI'] = {'epanomalies': 'false', 'devices': 'true', 'satellite': 'false', 'social_media': 'true', 'cctv': 'false', 'drones': 'false'}
 
 pilot_functionality_lookup['GUW'] = {'epanomalies': 'true', 'devices': 'true'}
+pilot_functionality_lookup['TTT'] = {'epanomalies': 'true', 'devices': 'true'}
 
 
 def get_alert_info(access_token):

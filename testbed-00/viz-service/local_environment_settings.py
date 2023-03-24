@@ -10,11 +10,11 @@ if 'DEVICE_BROKER' not in os.environ:
     target_enviroment = 'local.bench'
 
     my_broker = ''
-    path = ''
 
     os.environ['FILE_VISUALISER_FOLDER'] = 'visualis3r'
-    #os.environ['PILOTS'] = 'AAA,GUW'
-    os.environ['PILOTS'] = 'GUW'
+    os.environ['PILOTS'] = 'AAA,GUW,TTT'
+
+    os.environ['LOAD_LOCAL_ANOMALY_DATA'] = 'True'
 
     if target_enviroment == 'local.bench':
         #this is my local daocker install on localhost
@@ -23,14 +23,14 @@ if 'DEVICE_BROKER' not in os.environ:
         os.environ['DEVICE_BROKER'] = ip +':7111'
         os.environ['VISUALISER'] = ip + ':7110'
 
-        os.environ['WEBDAV_URL'] = ip + ':7120' #this is the docker image!
+        os.environ['WEBDAV_URL'] = ip + ':7130'
         os.environ['WEBDAV_NAME'] = 'admin'
         os.environ['WEBDAV_PASS'] = 'admin'
 
         os.environ['REMOTE_LOGGING_URL'] = ''
         os.environ['REMOTE_LOGGING_ENABLED'] = 'False'
 
-        path = '/docker/lotus-visualiser-local-bench/'
+        path = '/docker/lotus-visualiser-local-bench'
 
         if platform.system().lower() == 'windows':
             os.environ['FILE_PATH'] = 'c:' + path
@@ -38,6 +38,7 @@ if 'DEVICE_BROKER' not in os.environ:
             os.environ['FILE_PATH'] = path
 
         os.environ['PILOTS'] = 'GUW'
+        os.environ['PILOTS'] = 'TTT'
         os.environ['LOAD_LOCAL_ANOMALY_DATA'] = 'True'
         os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'] = os.environ['FILE_PATH']
 
@@ -57,6 +58,12 @@ if 'DEVICE_BROKER' not in os.environ:
 
         path = '/docker/lotus-visualiser-local-docker/'
 
+        if platform.system().lower() == 'windows':
+            os.environ['FILE_PATH'] = 'c:' + path
+        else:
+            os.environ['FILE_PATH'] = path
+
+
     if target_enviroment == 'windows.box':
         #this is my test pc with windows & docker
         ip = 'http://192.168.0.18'
@@ -75,14 +82,56 @@ if 'DEVICE_BROKER' not in os.environ:
 
         path = '/docker/lotus-visualiser-windows-box/'
 
-    if path == '':
-        raise Exception('Data path not set')
-
-    if platform.system().lower() == 'windows':
-        os.environ['FILE_PATH'] = 'c:' + path
-    else:
-        os.environ['FILE_PATH'] = path
+        if platform.system().lower() == 'windows':
+            os.environ['FILE_PATH'] = 'c:' + path
+        else:
+            os.environ['FILE_PATH'] = path
 
     #historic broker division
     os.environ['DEVICE_HISTORIC_BROKER'] = os.environ['DEVICE_BROKER']
     os.environ['USERLAYER_BROKER'] = os.environ['DEVICE_BROKER']
+
+    if False:
+        os.environ['VISUALISER'] = 'http://localhost:21100'
+        os.environ['VISUALISER'] = 'http://46.101.61.143:7100'
+
+
+        if False: #USE_DEMO_SERVER
+            my_broker = 'http://46.101.61.143:7101'
+            os.environ['DEVICE_BROKER'] = my_broker
+            os.environ['DEVICE_HISTORIC_BROKER'] = os.environ['DEVICE_BROKER']
+
+            os.environ['VISUALISER'] = 'http://46.101.61.143:7100'
+        else:
+            my_broker = 'http://0.0.0.0:7101'
+
+            #local docker broker
+            #my_broker = 'http://0.0.0.0:21101'
+
+            os.environ['DEVICE_BROKER'] = my_broker
+            os.environ['DEVICE_HISTORIC_BROKER'] = my_broker
+            os.environ['VISUALISER'] = 'http://0.0.0.0:7100'
+            os.environ['VISUALISER'] = 'http://0.0.0.0:21100' #local testing
+
+        os.environ['ALERT_BROKER'] = my_broker
+        os.environ['PILOTS'] = 'GUW,AAA'
+
+        os.environ['ALERT_HISTORIC_BROKER'] = my_broker
+        os.environ['ALERT_SLEEP_TIME'] = '20'
+        os.environ['ANOMALY_BROKER'] = my_broker
+        os.environ['ANOMALY_HISTORIC_BROKER'] = my_broker
+        os.environ['USERLAYER_BROKER'] = my_broker
+        os.environ['OTHER_BROKER'] = my_broker
+        os.environ['ANOMALY_SLEEP_TIME'] = '20'
+        os.environ['AAANDC_SLEEP_TIME'] = '600'
+
+        os.environ['REMOTE_LOGGING_URL'] = ''
+        os.environ['REMOTE_LOGGING_ENABLED'] = 'False'
+
+        os.environ['KEYROCK_ADMIN_NAME'] = 'None'
+        os.environ['KEYROCK_ADMIN_PASS'] = 'None'
+
+
+        os.environ['WEBDAV_URL'] = 'http://0.0.0.0:7120/'
+        os.environ['WEBDAV_NAME'] = 'admin'
+        os.environ['WEBDAV_PASS'] = 'admin'

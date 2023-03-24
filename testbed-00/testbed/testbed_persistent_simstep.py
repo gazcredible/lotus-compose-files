@@ -107,24 +107,36 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
             print('Build Detection Data')
             ad = unexe_epanet.epanet_anomaly_detection.epanet_anomaly_detection()
             ad.inp_file = sim_inst.inp_file
-            ad.build_anomaly_data(fiware_service= sim_inst.fiware_service, sensors=sensor_list, leak_node_ids=None)
+            ad.build_anomaly_data(simulation_start= sim_inst.start_datetime,fiware_service= sim_inst.fiware_service, sensors=sensor_list, leak_node_ids=None)
             ad.save_anomaly_data(sim_inst, os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'])
 
         if key == '2':
             print('Build Localisation Data')
             al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
             al.init(sim_inst,sensor_list)
-            al.build_datasets()
+
+            step_duration_as_minutes = 15
+
+            if sim_inst.fiware_service == 'GUW':
+                step_duration_as_minutes = 60
+
+            al.build_datasets( sim_inst.start_datetime, stepDuration_as_seconds = step_duration_as_minutes*60)
 
         if key == '3':
             print('Run Anomaly Localisation')
+
             al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
             al.init(sim_inst, sensor_list)
             al.load_datasets()
             al.anomaly_localisation.ML_buildModel()
-            al.sim_leak()
-            al = None
-            gc.collect()
+
+            step_duration_as_minutes = 15
+
+            if sim_inst.fiware_service == 'GUW':
+                step_duration_as_minutes = 60
+
+            al.run_leak_localisation_test( sim_inst.start_datetime,step_duration_as_minutes)
+
 
 
 def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
@@ -132,21 +144,31 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
 
     sensor_list = []
 
+    juncs = None
+    pipes = None
+
     if sim_inst.fiware_service == 'GUW':
         pipes = ['GP1', 'GP585', '6', 'GP269', 'GP544', '2', 'GP523', 'GP453']
         juncs = ['GJ409', 'GJ507', 'GJ533', 'GJ525','GJ258', 'GJ379', 'GJ397']
 
+    if sim_inst.fiware_service == 'AAA':
+        pipes = ['POZZO_3.R.M..1']
+        juncs = ['POZZO_11']
 
-        juncs = None
-        pipes = ['GP1']
+    if sim_inst.fiware_service == 'TTT':
+        juncs = ['76','104','72','96']
+        pipes = ['2','5','23','1']
+        #juncs = ['76']
+        #juncs = None
+        #pipes = ['GP1']
 
-        if pipes:
-            for pipe in pipes:
-                sensor_list.append({'ID': pipe, 'Type': 'flow'})
+    if pipes:
+        for pipe in pipes:
+            sensor_list.append({'ID': pipe, 'Type': 'flow'})
 
-        if juncs:
-            for junc in juncs:
-                sensor_list.append({'ID': junc, 'Type': 'pressure'})
+    if juncs:
+        for junc in juncs:
+            sensor_list.append({'ID': junc, 'Type': 'pressure'})
 
 
     #GARETH don't set this, see fn() notes

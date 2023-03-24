@@ -110,7 +110,7 @@ def sim_leak_management(sim: unexe_epanet.epanet_fiware, logger=None):
 
             if sim.getnodetype(index) == en.JUNCTION:
                 # GARETH - can only set emitter on junctions, not reservoirs or tanks
-                print(str(index).ljust(3, ' ') + ' ' + nodeID.ljust(30, ' ') + ' ' + str(round(emitter, 2)).rjust(10, ' '))
+                print(str(index).ljust(3, ' ') + ' ' + nodeID.ljust(30, ' ') + ' ' + str(round(emitter, 6)).rjust(10, ' '))
 
         print('\n')
 
@@ -131,6 +131,7 @@ def sim_leak_management(sim: unexe_epanet.epanet_fiware, logger=None):
                     if emitter < 1:
                         # create a nice leak
                         emitter = 9999
+                        emitter = 0.1
                     else:
                         # stop a nice leak
                         emitter = 0

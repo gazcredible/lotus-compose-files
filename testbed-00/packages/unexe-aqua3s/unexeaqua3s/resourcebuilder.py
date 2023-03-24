@@ -223,6 +223,8 @@ class ResourceBuilder(unexeaqua3s.webdav.webdav):
                     if file.endswith('.inp'):
                         dst = self.local_root + service + '/waternetwork/epanet.inp'
                         if self.convert_files:
+                            path = os.path.dirname(dst)
+                            unexefiware.file.buildfilepath(path)
                             shutil.copy(file, dst)
                         else:
                             print('COPY ' +file + ' -> ' + dst)

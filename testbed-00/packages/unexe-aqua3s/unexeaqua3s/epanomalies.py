@@ -91,22 +91,28 @@ class EPAnomalies:
                             next_read = float(device.property_value(prop, dp=-1))
 
                             ewma_result = self.calc_ewma(device.property_observedAt(prop), next_read, prev_ewma, alpha, avg_valuesDB)
-
-                            if abs(ewma_result[0]) > threshold:
+                            ewma_value = 0
+                            
+                            if ewma_result is None:
                                 triggered = 'True'  # i.e. an alarm
-                                reason = 'Surpasses_Threshold'
-                                reason += ' cur.reading: '+ str(next_read)
-                                reason += ' prev ewma: ' + str(round(prev_ewma,2))
-                                reason += ' curr. ewma: ' +str(round(ewma_result[0],2))
-                                reason += ' thresh: ' +str(round(threshold,2))
-                                reason += ' av: ' +str(ewma_result[1])
-                                reason += ' SD: ' + str(ewma_result[2])
-
-                                reason += ' min: ' + str(ewma_result[1] - ewma_result[2])
-                                reason += ' max: ' + str(ewma_result[1] + ewma_result[2])
+                                reason = 'Avg Values Missing'
                             else:
-                                triggered = 'False'
-                                reason = 'None'
+                                ewma_value = ewma_result[0]
+                                if abs(ewma_result[0]) > threshold:
+                                    triggered = 'True'  # i.e. an alarm
+                                    reason = 'Surpasses_Threshold'
+                                    reason += ' cur.reading: '+ str(next_read)
+                                    reason += ' prev ewma: ' + str(round(prev_ewma,2))
+                                    reason += ' curr. ewma: ' +str(round(ewma_result[0],2))
+                                    reason += ' thresh: ' +str(round(threshold,2))
+                                    reason += ' av: ' +str(ewma_result[1])
+                                    reason += ' SD: ' + str(ewma_result[2])
+
+                                    reason += ' min: ' + str(ewma_result[1] - ewma_result[2])
+                                    reason += ' max: ' + str(ewma_result[1] + ewma_result[2])
+                                else:
+                                    triggered = 'False'
+                                    reason = 'None'
 
                             if device.epanomalysetting_get_entry('fudge_state') == 'True':
                                 triggered = 'True'
@@ -120,7 +126,7 @@ class EPAnomalies:
                             device.epanomalystatus_set_entry('triggered', str(triggered))
                             device.epanomalystatus_set_entry('reason', str(reason))
 
-                            device.epanomalysetting_set_entry('ewma_value', str(ewma_result[0]))
+                            device.epanomalysetting_set_entry('ewma_value', str(ewma_value))
                             device.epanomalysetting_set_entry('threshold', str(threshold))
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
@@ -161,22 +167,25 @@ class EPAnomalies:
 
     def calc_ewma(self, observed_date:str, current_value:float, prev_ewma:float, alpha:float, avg_valuesDB) ->float:
         #collect std, avg for time step
+        try:
+            rounded_time = unexefiware.time.round_time(dt=unexefiware.time.fiware_to_datetime(observed_date), date_delta=datetime.timedelta(minutes=15), to='up')
 
-        rounded_time = unexefiware.time.round_time(dt=unexefiware.time.fiware_to_datetime(observed_date), date_delta=datetime.timedelta(minutes=15), to='up')
+            week_time = rounded_time.strftime("%A-%H:%M")
+            #get avg. value
+            avg_value = avg_valuesDB.Read_avg[avg_valuesDB.timestamp == week_time]
+            avg_value = avg_value.iloc[0]
+            #get std
+            std_value = avg_valuesDB.Read_std[avg_valuesDB.timestamp == week_time]
+            std_value = std_value.iloc[0]
 
-        week_time = rounded_time.strftime("%A-%H:%M")
-        #get avg. value
-        avg_value = avg_valuesDB.Read_avg[avg_valuesDB.timestamp == week_time]
-        avg_value = avg_value.iloc[0]
-        #get std
-        std_value = avg_valuesDB.Read_std[avg_valuesDB.timestamp == week_time]
-        std_value = std_value.iloc[0]
+            diff = current_value - avg_value
+            z = diff / std_value
+            ewma = (1 - alpha) * prev_ewma + alpha * z
+            return (ewma, avg_value, std_value)
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(),e)
 
-        diff = current_value - avg_value
-        z = diff / std_value
-        ewma = (1 - alpha) * prev_ewma + alpha * z
-        return (ewma, avg_value, std_value)
-
+        return None
 
     def build_anomaly_settings(self, fiware_service:str):
         deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo2(fiware_service)

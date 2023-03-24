@@ -20,6 +20,8 @@ if 'DEVICE_BROKER' not in os.environ:
         #this is my local daocker install on localhost
         ip = 'http://127.0.0.1'
 
+        os.environ['PILOTS'] = 'AAA,GUW,TTT'
+
         os.environ['DEVICE_BROKER'] = ip +':7111'
         os.environ['VISUALISER'] = ip + ':7110'
 
@@ -37,7 +39,6 @@ if 'DEVICE_BROKER' not in os.environ:
         else:
             os.environ['FILE_PATH'] = path
 
-        os.environ['PILOTS'] = 'GUW'
         os.environ['LOAD_LOCAL_ANOMALY_DATA'] = 'True'
         os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'] = os.environ['FILE_PATH']
 

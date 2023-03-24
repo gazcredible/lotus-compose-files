@@ -52,15 +52,18 @@ class AnomalyLocalization():
                 self.sensors[i]['Index'] = en.getlinkindex(self.epanetmodel.proj_for_simulation, self.sensors[i]['ID'])
 
     def build_datasets(self,
+                      simulation_date: datetime.datetime,
+                      stepDuration: int,
                       leak_nodes=None,
                       noleak_dataset: Optional[bool] = True,
                       training_dataset: Optional[bool] = True,
                       testing_dataset: Optional[bool] = True,
                       noise_sensor: Optional[float] = 0.5,
-                      stepDuration: Optional[int] = 15 * 60,
-                      simulation_date: Optional[datetime.datetime] = datetime.datetime(2022, 5, 6),
+
                       testleaks: Optional[int] = 100
                       ):
+        raise Exception('Dont call me')
+
         if noleak_dataset == True:
             print("building no leak dataset")
             noleakDB = self.sim_no_leak(stepDuration=stepDuration,
@@ -90,6 +93,8 @@ class AnomalyLocalization():
                     duration: Optional[int] = 52 * 7 * 24 * 60 * 60,  # 1 year
                     sigma: Optional[float] = 0.5
                     ):
+        raise Exception('Dont call me')
+
         start_time = datetime.datetime.now()
         self.epanetmodel.set_time_param(enu.TimeParams.Duration, duration)  # set simulation duration for 15 days
         self.epanetmodel.set_time_param(enu.TimeParams.HydStep, stepDuration)  # set hydraulic time step to 15min
@@ -162,6 +167,7 @@ class AnomalyLocalization():
                        sigma: float,
                        leakExponent: Optional[float] = 0.99
                        ):
+        raise Exception('Dont call me')
         start_time = datetime.datetime.now()
         leakIndex = en.getnodeindex(self.epanetmodel.proj_for_simulation, leakID)
         self.epanetmodel.set_time_param(enu.TimeParams.Duration, (duration))  # set simulation duration for 15 days
@@ -245,6 +251,7 @@ class AnomalyLocalization():
                    leakEmitter: Optional[float] = 1,
                    sigma: Optional[float] = 0.5
                    ):
+        raise Exception('Dont call me')
         nodeIDs = self.epanetmodel.get_node_ids(enu.NodeTypes.Junction)
         leaks = []
         if leak_nodes is None: #no leak nodes provided
@@ -315,6 +322,9 @@ class AnomalyLocalization():
                          nodes: Optional[int] = 100,
                          localizationWindow_sec: Optional[float] = 4 * 60 * 60,
                          sigma: Optional[float] = 0.5):
+
+        raise Exception('Dont call me')
+
         nodeIDs = self.epanetmodel.get_node_ids(enu.NodeTypes.Junction)
         if leak_nodes is None: #no leak nodes provided
              leak_nodes = nodeIDs

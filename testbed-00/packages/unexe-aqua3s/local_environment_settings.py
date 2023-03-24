@@ -20,6 +20,8 @@ if 'DEVICE_BROKER' not in os.environ:
         #this is my local daocker install on localhost
         ip = 'http://127.0.0.1'
 
+        os.environ['PILOTS'] = 'TTT'
+
         os.environ['DEVICE_BROKER'] = ip +':7111'
         os.environ['VISUALISER'] = ip + ':7110'
 

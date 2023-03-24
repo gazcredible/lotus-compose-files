@@ -33,6 +33,7 @@ def testbed():
     #fiware_service = 'SOF'
     #fiware_service = 'WBL'
     fiware_service = 'GUW'
+    fiware_service = 'TTT'
 
     fiware_wrapper = unexefiware.fiwarewrapper.fiwareWrapper(url=os.environ['DEVICE_BROKER'], historic_url=os.environ['DEVICE_HISTORIC_BROKER'])
     fiware_wrapper.init(logger=logger)

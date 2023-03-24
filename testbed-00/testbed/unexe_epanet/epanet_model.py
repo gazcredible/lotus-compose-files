@@ -83,6 +83,7 @@ class epanet_model:
                 en.openH(self.epanetmodel.proj_for_simulation)
                 en.initH(self.epanetmodel.proj_for_simulation, en.NOSAVE)
 
+            self.next_time_step_in_sec = 0
             self.elapsed_time_in_sec = 0
             self.set_datetime(start_datetime)
 
