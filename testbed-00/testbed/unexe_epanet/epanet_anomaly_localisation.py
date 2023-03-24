@@ -283,7 +283,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         if training_dataset == True:
             print("building leak training dataset")
-            repeats = 100 #22
+            repeats = 1 #22
             self.sim_leak_all_nodes2(stepDuration = stepDuration,
                                     simulation_date = simulation_date,
                                     sigma = noise_sensor,
@@ -291,7 +291,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
                                     repeats=repeats)
         if testing_dataset == True:
             print("building leak testing dataset")
-            repeats = 50  # 10
+            repeats = 5  # 10
             self.sim_random_leaks2(nodes=testleaks,
                                   simulation_date = simulation_date,
                                   stepDuration=stepDuration,
@@ -606,7 +606,7 @@ class epanet_anomaly_localisation:
                                                  noleak_dataset=True,
                                                  training_dataset=True,
                                                  testing_dataset=True,
-                                                 testleaks= 250
+                                                 testleaks= 20
                                                 )
 
         simulationTime = datetime.datetime.now() - start_time

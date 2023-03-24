@@ -61,3 +61,9 @@ testbed-00/viz-service/__pycache__/
 testbed-00/viz-service/blueprints/__pycache__/
 
 testbed-00 (copy)/
+
+testbed-00/testbed/TTT_test_leaks.pickle
+
+testbed-00/testbed/TTT_train_leaks.pickle
+
+testbed-00/testbed/TTT_train_noleak.pickle
