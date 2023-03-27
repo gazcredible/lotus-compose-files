@@ -121,7 +121,8 @@ class EPAnomalies:
                             #debug info
                             reason += ' ' + str(datetime.datetime.utcnow().replace(microsecond=0))
 
-                            print(device.get_id() + ' ' + reason)
+                            if triggered is 'True':
+                                self.logger.log(inspect.currentframe(), device.get_id() + ' ' + reason)
 
                             device.epanomalystatus_set_entry('triggered', str(triggered))
                             device.epanomalystatus_set_entry('reason', str(reason))
@@ -131,7 +132,7 @@ class EPAnomalies:
                         except Exception as e:
                             self.logger.exception(inspect.currentframe(), e)
 
-                    print('Data:' + str(device.property_observedAt(prop)) + ' ' + str(device.property_value(prop)))
+                    #print('Data:' + str(device.property_observedAt(prop)) + ' ' + str(device.property_value(prop)))
 
                     device.epanomalystatus_patch(fiware_service)
                     device.epanomalysetting_patch(fiware_service)

@@ -153,7 +153,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
 
     def build_from_deviceInfo(self, deviceInfo:unexeaqua3s.deviceinfo.DeviceInfo2, now:datetime.datetime):
         try:
-            self.logger.log(inspect.currentframe(), 'Start Chart building')
+#            self.logger.log(inspect.currentframe(), 'Start Chart building')
             json_data = {}
 
             broker = deviceInfo.fiware_wrapper
@@ -186,8 +186,8 @@ class ChartService(unexeaqua3s.service.ServiceBase):
 
             broker.create_instance(data_to_write, deviceInfo.fiware_service)
 
-            self.logger.log(inspect.currentframe(), 'Charting Packet size:' + str(len(unexeaqua3s.json.dumps(data_to_write))))
-            self.logger.log(inspect.currentframe(), 'Chart building done')
+#            self.logger.log(inspect.currentframe(), 'Charting Packet size:' + str(len(unexeaqua3s.json.dumps(data_to_write))))
+#            self.logger.log(inspect.currentframe(), 'Chart building done')
 
         except Exception as e:
             if self.logger:
@@ -276,7 +276,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
         broker = deviceInfo.fiware_wrapper
 
         try:
-            self.logger.log(inspect.currentframe(), 'Charting Update: ' + deviceInfo.fiware_service)
+#            self.logger.log(inspect.currentframe(), 'Charting Update: ' + deviceInfo.fiware_service)
             t0 = time.perf_counter()
 
             now = datetime.datetime.now(unexeaqua3s.pilot_timezone.get(deviceInfo.fiware_service)).replace(tzinfo=None)
@@ -314,7 +314,7 @@ class ChartService(unexeaqua3s.service.ServiceBase):
                 else:
                     text += ' No updates required'
 
-                self.logger.log(inspect.currentframe(), text + ' Time Taken: ' + str(round(time.perf_counter() - t0,1))+'s')
+#                self.logger.log(inspect.currentframe(), text + ' Time Taken: ' + str(round(time.perf_counter() - t0,1))+'s')
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(), e)

@@ -167,7 +167,8 @@ class mapviewui
                 }
 
                 let id = 'controlled_properties_button_group';
-                let div2 = this.add_vertical_button_group(this, id, button_data);
+                let div2 = this.add_vertical_button_group(this, id, button_data, );
+
                 div.appendChild(div2);
 
                 this.on_button_press(id,button_data[0]['id'],"btn btn-primary");

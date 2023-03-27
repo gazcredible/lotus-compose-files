@@ -498,7 +498,7 @@ class PilotProcessor:
 
     def update_devices(self):
         if self.disable_updates == False:
-            self.logger.log(inspect.currentframe(),'update_pilot_devices:' + self.fiware_service)
+            #self.logger.log(inspect.currentframe(),'update_pilot_devices:' + self.fiware_service)
 
             deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo2(self.fiware_service)
             deviceInfo.run()

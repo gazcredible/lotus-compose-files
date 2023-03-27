@@ -492,6 +492,7 @@ class mapview_waternetwork
 
             if (this.has_model() === true)
             {
+                //EPANET visualisation show/hide
                 {
                     let div = document.createElement('div');
                     div.className = "d-flex justify-content-center";
@@ -505,9 +506,9 @@ class mapview_waternetwork
                     div.appendChild(div2);
 
                     this.on_button_press(id,button_data[0]['id'],"btn btn-primary");
-
                 }
 
+                //EPANET time scrubber
                 {
                     let input = document.createElement('input');
 
@@ -524,131 +525,148 @@ class mapview_waternetwork
                     };
 
                     epanet_ui_root.appendChild(input);
-                }
 
-                let buttonClassName = "btn btn-primary";
-
-                {
-                    let button = document.createElement('button');
-                    button.type = "button";
-                    button.className = buttonClassName;
-
-                    button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
-                    button.innerHTML = "<<";
-                    button.id = 'epanet_sim_time_slider_back';
-                    button.onclick = function ()
-                    {
-                        window.mapview.waternetwork.sim_time_update(button.id, 0);
-                    };
-                    epanet_ui_root.appendChild(button);
-                }
-
-                {
-                    let button = document.createElement('button');
-                    button.type = "button";
-                    button.className = buttonClassName;
-
-                    button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
-                    button.innerHTML = ">>";
-                    button.id = 'epanet_sim_time_slider_next';
-                    button.onclick = function ()
-                    {
-                        window.mapview.waternetwork.sim_time_update(button.id, 0);
-                    };
-                    epanet_ui_root.appendChild(button);
-                }
-
-                {
-                    let button = document.createElement('button');
-                    button.type = "button";
-                    button.className = buttonClassName;
-
-                    button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
-                    button.innerHTML = "Reset";
-                    button.id = 'epanet_sim_time_slider_reset';
-                    button.onclick = function ()
-                    {
-                        window.mapview.waternetwork.sim_time_update(button.id, 0);
-                    };
-                    epanet_ui_root.appendChild(button);
-                }
-
-
-                {
-                    let label = document.createElement('label');
-                    label.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;display: block;";
-                    label.id = 'epanet_sim_time_info';
-                    label.innerHTML = '<br>Some Value:<br>';
-                    epanet_ui_root.appendChild(label);
-                }
-
-                {
-                    let label = document.createElement('label');
-                    label.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;display: block;";
-                    label.innerHTML = '<br>Simulation Mode:<br>';
-                    label.style += "display: block;";
-                    epanet_ui_root.appendChild(label);
-                }
-
-                {
-                    //1 row, 2 cols -> LHS: node modes RHS: link modes (radio buttons
-                    let div = document.createElement('div');
-                    div.class = "container";
-                    epanet_ui_root.appendChild(div);
-                    let row = document.createElement('div');
-                    row.className = "row";
-                    div.appendChild(row);
 
                     let buttonClassName = "btn btn-primary";
 
                     {
-                        //node modes ....
-                        let col0 = document.createElement('div');
-                        col0.className = "col";
+                        let button = document.createElement('button');
+                        button.type = "button";
+                        button.className = buttonClassName;
 
-                        row.appendChild(col0);
-
-
-                        let button_data = [];
-
-                        for (let i = 0; i < this.node_modes.length; i++)
+                        button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
+                        button.innerHTML = "<<";
+                        button.id = 'epanet_sim_time_slider_back';
+                        button.onclick = function ()
                         {
-                            let record = {};
-                            record['id'] = this.node_modes[i]['id'];
-                            record['print_text'] = this.node_modes[i]['label'];
-
-                            button_data.push(record);
-                        }
-
-                        let id = 'epanet_sim_node_mode';
-                        let div2 = window.mapview.mapviewui.add_vertical_button_group(this, id, button_data);
-                        col0.appendChild(div2);
-
-                        this.on_button_press(id,button_data[0]['id'],"btn btn-primary");
+                            window.mapview.waternetwork.sim_time_update(button.id, 0);
+                        };
+                        epanet_ui_root.appendChild(button);
                     }
+
                     {
-                        //link_modes
-                        let col1 = document.createElement('div');
-                        col1.className = "col";
-                        row.appendChild(col1);
+                        let button = document.createElement('button');
+                        button.type = "button";
+                        button.className = buttonClassName;
 
-                        let button_data = [];
-
-                        for (let i = 0; i < this.link_modes.length; i++)
+                        button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
+                        button.innerHTML = ">>";
+                        button.id = 'epanet_sim_time_slider_next';
+                        button.onclick = function ()
                         {
-                            let record = {};
-                            record['id'] = this.link_modes[i]['id'];
-                            record['print_text'] = this.link_modes[i]['label'];
-
-                            button_data.push(record);
-                        }
-
-                        let id = 'epanet_sim_link_mode';
-                        let div2 = window.mapview.mapviewui.add_vertical_button_group(this, id, button_data);
-                        col1.appendChild(div2);
-
-                        this.on_button_press(id,button_data[0]['id'],"btn btn-primary");
+                            window.mapview.waternetwork.sim_time_update(button.id, 0);
+                        };
+                        epanet_ui_root.appendChild(button);
                     }
+
+                    {
+                        let button = document.createElement('button');
+                        button.type = "button";
+                        button.className = buttonClassName;
+
+                        button.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;";
+                        button.innerHTML = "Reset";
+                        button.id = 'epanet_sim_time_slider_reset';
+                        button.onclick = function ()
+                        {
+                            window.mapview.waternetwork.sim_time_update(button.id, 0);
+                        };
+                        epanet_ui_root.appendChild(button);
+                    }
+
+                    {
+                        let label = document.createElement('label');
+                        label.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;display: block;";
+                        label.id = 'epanet_sim_time_info';
+                        label.innerHTML = '<br>Some Value:<br>';
+                        epanet_ui_root.appendChild(label);
+                    }
+                }
+
+                //EPANET mode buttons
+                {
+                    {
+                        let label = document.createElement('label');
+                        label.style = "font: bold 12px/20px 'Helvetica Neue', Arial, Helvetica, sans-serif;display: block;";
+                        label.innerHTML = '<br>Simulation Mode:<br>';
+                        label.style += "display: block;";
+                        epanet_ui_root.appendChild(label);
+                    }
+
+                    {
+                        //1 row, 2 cols -> LHS: node modes RHS: link modes (radio buttons
+                        let div = document.createElement('div');
+                        div.class = "container";
+                        epanet_ui_root.appendChild(div);
+                        let row = document.createElement('div');
+                        row.className = "row";
+                        div.appendChild(row);
+
+                        let buttonClassName = "btn btn-primary";
+
+                        {
+                            //node modes ....
+                            let col0 = document.createElement('div');
+                            col0.className = "col";
+
+                            row.appendChild(col0);
+
+
+                            let button_data = [];
+
+                            for (let i = 0; i < this.node_modes.length; i++)
+                            {
+                                let record = {};
+                                record['id'] = this.node_modes[i]['id'];
+                                record['print_text'] = this.node_modes[i]['label'];
+
+                                button_data.push(record);
+                            }
+
+                            let id = 'epanet_sim_node_mode';
+                            let div2 = window.mapview.mapviewui.add_vertical_button_group(this, id, button_data);
+                            col0.appendChild(div2);
+
+                            this.on_button_press(id, button_data[0]['id'], "btn btn-primary");
+                        }
+                        {
+                            //link_modes
+                            let col1 = document.createElement('div');
+                            col1.className = "col";
+                            row.appendChild(col1);
+
+                            let button_data = [];
+
+                            for (let i = 0; i < this.link_modes.length; i++)
+                            {
+                                let record = {};
+                                record['id'] = this.link_modes[i]['id'];
+                                record['print_text'] = this.link_modes[i]['label'];
+
+                                button_data.push(record);
+                            }
+
+                            let id = 'epanet_sim_link_mode';
+                            let div2 = window.mapview.mapviewui.add_vertical_button_group(this, id, button_data);
+                            col1.appendChild(div2);
+
+                            this.on_button_press(id, button_data[0]['id'], "btn btn-primary");
+                        }
+                    }
+                }
+
+                //EPANET fly to node
+                {
+                    let button_data = [];
+
+                    for (let key of Object.entries(this.water_network.stuff))
+                    {
+                        button_data.push({id:key[0], print_text: key[0]})
+                    }
+
+                    let id = 'epanet_flyto_node';
+                    let div2 = window.mapview.mapviewui.add_vertical_button_group(this, id, button_data,"btn btn-primary mb-2");
+                    epanet_ui_root.appendChild(div2);
                 }
 
                 this.sim_time_update('', 0);
@@ -711,6 +729,12 @@ class mapview_waternetwork
 
     on_button_press(div_id, selected_id, classname)
     {
+        if(div_id === 'epanet_flyto_node')
+        {
+            let val = window.mapview.waternetwork.water_network.stuff[selected_id];
+            window.mapview.map.jumpTo({center: [val[1],val[0]], zoom:18});
+        }
+
         if(div_id === 'epanet_sim_node_mode')
         {
             let elements = document.getElementById(div_id);

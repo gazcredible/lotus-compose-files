@@ -176,6 +176,16 @@ class Aqua3sWaterNetwork(epanet_fiware.waternetwork.WaterNetwork):
 
         return network_geojson
 
+    def get_stuff(self) ->dict:
+        data = {}
+        try:
+            if 'Junction' in self.fiware_component:
+                for item in self.fiware_component['Junction']:
+                    data[item['id']] = [item['location']['value']['coordinates'][0],item['location']['value']['coordinates'][1]]
+        except Exception as e:
+            print(inspect.currentframe() + ' Epic Fail')
+        return data
+
 
 class Aqua3sFiwareResources(unexeaqua3s.fiwareresources.FiwareResources):
     def __init__(self, options=None):

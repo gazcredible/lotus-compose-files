@@ -6,6 +6,7 @@ import os
 import unexefiware.base_logger
 import unexefiware.time
 import unexeaqua3s.resourcebuilder
+import unexeaqua3s.deviceinfo
 import datetime
 import unexe_epanet.epanet_fiware
 import unexewrapper
@@ -15,7 +16,8 @@ import models
 import unexe_epanet.epanet_anomaly_detection
 import unexe_epanet.epanet_anomaly_localisation
 import gc
-
+import pandas
+import json
 
 #GARETH - persistent simstep means that we need to run the sim from in here and do other stuff (from in here)
 #other stuff
@@ -36,7 +38,8 @@ def sim_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
 
         print('\n')
         print('99..Reset Sim')
-        print('2..Run a step: ' + str(int(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' min')
+        print('1..Run a step: ' + str(int(unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' min')
+        print('2..Run 4 hours: ' + str(int(4 * 60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
         print('3..Run 12 hours: ' + str(int(12 * 60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
         print('4..Run a day: ' + str(int(24 * 60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))) + ' steps')
         print('4a..Run a week')
@@ -54,13 +57,20 @@ def sim_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
             print('Reset')
             sim_inst.reset(sensor_list, start_datetime)
 
-        if key == '2':
+        if key == '1':
             print('Run a step')
             sim_inst.simulate(1)
 
 
+        if key == '2':
+            print('Run 4hrs')
+            time_steps = int(4 * 60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
+            sim_inst.simulate(time_steps)
+
+
+
         if key == '3':
-            print('Run 12 steps')
+            print('Run 12hrs')
             time_steps = int(12*60 / unexe_epanet.epanet_model.SEC_TO_MIN(sim_inst.get_hyd_step()))
 
             sim_inst.simulate(time_steps)
@@ -95,6 +105,7 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
         print('1..Build Anomaly Detection Data')
         print('2..Build Anomaly Localisation Data')
         print('3..Run Anomaly Localisation')
+        print('4..Localise from FIWARE anomaly data')
         print('X..Back')
         print('\n')
 
@@ -135,8 +146,66 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
             if sim_inst.fiware_service == 'GUW':
                 step_duration_as_minutes = 60
 
-            al.run_leak_localisation_test( sim_inst.start_datetime,step_duration_as_minutes)
+            al.run_leak_localisation_test( sim_inst.start_datetime,step_duration_as_minutes, leak_id='101')
 
+
+        if key == '4':
+            print('Localise from FIWARE anomaly data')
+
+            al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
+            al.init(sim_inst, sensor_list)
+            al.load_datasets()
+            al.anomaly_localisation.ML_buildModel()
+
+            columns = ['ReportStep', 'ReportTime', 'Sensor_ID', 'Sensor_type', 'Read']
+
+            temporal_dataframe = pandas.DataFrame(columns)
+
+            leakwindow_end_date = sim_inst.elapsed_datetime()
+            leakwindow_start_date = leakwindow_end_date - datetime.timedelta(hours=4.25)
+
+            fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
+            fiware_wrapper.init(logger=al.logger)
+
+            deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo2(fiware_service=sim_inst.fiware_service)
+            deviceInfo.run()
+
+
+            devices = fiware_wrapper.get_all_type(sim_inst.fiware_service, 'Device')
+
+            if devices[0] ==200:
+                rows = []
+                for device in devices[1]:
+                    epanet_ref = json.loads(device['epanet_reference']['value'])
+                    temporal_result = fiware_wrapper.get_temporal(sim_inst.fiware_service,device['id'], [device['controlledProperty']['value']], unexefiware.time.datetime_to_fiware(leakwindow_start_date), unexefiware.time.datetime_to_fiware(leakwindow_end_date))
+                    if temporal_result[0] == 200:
+                        step = 0.0
+                        for entry in temporal_result[1][device['controlledProperty']['value']]['values']:
+                            rounded_time = unexefiware.time.round_time(dt=unexefiware.time.fiware_to_datetime(entry[1]), date_delta=datetime.timedelta(minutes=15), to='up')
+
+                            week_time = rounded_time.strftime("%A-%H:%M")
+
+                            rows.append([step, unexefiware.time.fiware_to_datetime(entry[1]), epanet_ref['epanet_id'], device['controlledProperty']['value'], float(entry[0]) ] )
+                            step += 1.0
+
+                leak_df = pandas.DataFrame(rows, columns=columns)
+
+                leak_df['Read_noise'] = leak_df['Read']
+                leak_df['timestamp'] = leak_df['ReportTime'].dt.strftime("%A-%H:%M")
+                leak_df['leakflow'] = 0
+
+                leak_df = pandas.merge(leak_df, al.anomaly_localisation.simulationData['train_noleak'][
+                    ['timestamp', 'Sensor_ID', 'Read_avg', 'Read_std']], on=['timestamp', 'Sensor_ID'],
+                                   how='left').drop_duplicates()
+
+                leak_df['z'] = (leak_df['Read_noise'] - leak_df['Read_avg']) / leak_df['Read_std']
+
+            for device_id in deviceInfo.deviceInfoList:
+                # test code here
+                device = deviceInfo.get_smart_model(device_id)
+
+                if device.epanomaly_isTriggered() == True:
+                    al.localise_leak(device.EPANET_id(),leak_df,leakwindow_start_date, leakwindow_end_date)
 
 
 def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
@@ -158,9 +227,6 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
     if sim_inst.fiware_service == 'TTT':
         juncs = ['76','104','72','96']
         pipes = ['2','5','23','1']
-        #juncs = ['76']
-        #juncs = None
-        #pipes = ['GP1']
 
     if pipes:
         for pipe in pipes:
@@ -173,8 +239,10 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
 
     #GARETH don't set this, see fn() notes
     #sim_inst.set_hyd_step(MIN_TO_SEC(120))
+    print('Init EPANET Broker')
     sim_inst.set_hyd_step(sim_inst.get_pattern_step())
     sim_inst.reset(sensor_list, start_datetime)
+    print('Init EPANET Broker-Done')
 
     while quitApp is False:
         print('\n')

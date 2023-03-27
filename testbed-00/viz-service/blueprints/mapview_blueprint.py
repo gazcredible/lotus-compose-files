@@ -95,10 +95,15 @@ def get_pilot_data():
 
         data['water_network'] = {}
         data['has_water_network'] = blueprints.keyrock_blueprint.get_is_epanet_available(access_token)
+        data['epanet_data'] = {}
         data['has_user_layers'] = False
         data['analytics_time_labels'] = unexeaqua3s.service_chart.chart_modes
 
         data['has_epanet_anomalies'] = False
+
+        if data['has_water_network'] == True:
+            #data is name [loc]
+            pass
 
 
         if blueprints.globals.fiware_resources.has_userlayers(loc) and blueprints.keyrock_blueprint.get_is_userlayer_available(access_token):
@@ -166,6 +171,7 @@ def get_simulation_global_data():
         if blueprints.globals.fiware_resources.has_waternetwork(fiware_service) == True:
             data['frame count'] = blueprints.globals.fiware_resources.waternetwork_get_frame_count(fiware_service)
             data['layers'] = blueprints.globals.fiware_resources.get_geojson_for_slipmap(fiware_service)
+            data['stuff'] = blueprints.globals.fiware_resources.resources[fiware_service]['epanet'].get_stuff()
 
         payload = unexeaqua3s.json.dumps(data);
         blueprints.debug.dump_payload_to_disk('get_simulation_global_data('+fiware_service+')', payload)

@@ -1,3 +1,7 @@
+import copy
+
+import numpy
+
 import anomalies.Anomaly_Localization_Class
 import unexe_epanet.epanet_fiware
 import datetime
@@ -16,9 +20,14 @@ from scipy.stats import truncnorm
 import numpy as np
 from typing import Optional
 import matplotlib.pyplot as plt
+import matplotlib.collections
 import epanet.toolkit as en #no function written in epanetmodel for pattern creation
 
+import warnings
+warnings.filterwarnings("ignore")
 
+import sys
+import os
 
 class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalization):
     def __init__(self,
@@ -127,7 +136,9 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
         coverage = Coverage.from_geodataframes(prob_gpd, grid, "Node", "ID", demand_col="Probability",
                                                 demand_name="demand")
         problem = Problem.mclp([coverage], max_supply={coverage: num_SA})
-        problem.solve(pulp.PULP_CBC_CMD())
+
+        problem.solve(pulp.PULP_CBC_CMD(msg=False)) #https://stackoverflow.com/questions/64215540/how-to-do-model-solve-not-show-any-message-in-python-using-pulp
+
         #output results
         selected_areas = problem.selected_supply(coverage)
         selected_areas = list(map(int, selected_areas))  # convert values in list to int
@@ -139,7 +150,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
             for _,row in prob_gpd.iterrows():
                 if row['Probability'] > 0.01:
-                    print(row['Node'] + ' ' + str(round(row['Probability'],2)))
+                    #print(row['Node'] + ' ' + str(round(row['Probability'],2)))
 
                     for i,area in  selected_areas_df.iterrows():
                         if row['geometry'].within(area['geometry']):
@@ -246,8 +257,13 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
 
         if isinstance(mclp_results, pandas.DataFrame):
-            for row in mclp_results.iterrows():
-                ax.plot(*row[1]['geometry'].exterior.xy, c=[0,0,1,1], zorder=3)
+
+            #for row in mclp_results.iterrows():
+            #    ax.plot(*row[1]['geometry'].exterior.xy, c=[0,0,1,1], zorder=3)
+
+            for _, row in mclp_results.iterrows():
+                if row['Total_Probability'] > 0.01:
+                    ax.plot(*row['geometry'].exterior.xy, c=[0, 0, 1, 1], zorder=3)
 
         if isinstance(leak_coords,list):
             ax.scatter(leak_coords[0], leak_coords[1], s=10, c=[[1, 1, 0, 1]], zorder=4)
@@ -283,7 +299,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         if training_dataset == True:
             print("building leak training dataset")
-            repeats = 1 #22
+            repeats = 10 #22
             self.sim_leak_all_nodes2(stepDuration = stepDuration,
                                     simulation_date = simulation_date,
                                     sigma = noise_sensor,
@@ -526,7 +542,9 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         old_date = simulation_date.date()
         self.add_demand_noise()
-        t = en.nextH(self.epanetmodel.proj_for_simulation)
+        #GARETH - this is ticking the sim by one step, so it's out by one all the time
+        #t = en.nextH(self.epanetmodel.proj_for_simulation)
+        t = 1
         rows = []
         while t > 0:
             en.runH(self.epanetmodel.proj_for_simulation)
@@ -592,12 +610,16 @@ class epanet_anomaly_localisation:
     def __init__(self):
         self.anomaly_localisation = None
         self.coord_system = None
+        self.sim_inst = None
+
+        self.logger = unexefiware.base_logger.BaseLogger()
 
     def init(self,sim_inst:unexe_epanet.epanet_fiware.epanet_fiware, sensor_list:list):
         self.anomaly_localisation = AnomalyLocalisation(inp_file=sim_inst.inp_file, network_name=sim_inst.fiware_service, sensors=sensor_list,proj_auth_code=sim_inst.coord_system)
         self.anomaly_localisation.get_sensor_indices()
 
         self.coord_system = sim_inst.coord_system
+        self.sim_inst = sim_inst
     def build_datasets(self, simulation_date:datetime.datetime, stepDuration_as_seconds:float):
         start_time = datetime.datetime.now()
         self.anomaly_localisation.build_datasets2(simulation_date=simulation_date,
@@ -617,12 +639,40 @@ class epanet_anomaly_localisation:
     def load_datasets(self):
         self.anomaly_localisation.load_datafiles()
 
-    def run_leak_localisation_test(self, simulation_date:datetime.datetime, step_duration_in_min:int):
+
+    def localise_leak(self, epanet_sensor_name:str, leak_df:pandas.DataFrame, leakwindow_start_date:datetime.datetime,leakwindow_end_date:datetime.datetime):
+
+        try:
+            leakEmitter = 5
+
+            leak_df['leakNode'] = epanet_sensor_name
+            leak_df['leakEmitter'] = leakEmitter
+            leak_df['X-coord'] = 'X'
+            leak_df['Y-coord'] = 'Y'
+            leak_df['timeseries_id'] = 'Test'
+            # %%
+            leak_df = leak_df[leak_df.ReportTime >= (leakwindow_start_date)]
+            leak_df = leak_df[leak_df.ReportTime < (leakwindow_end_date)]
+
+            leak_df2 = copy.deepcopy(leak_df)
+            # %%
+            sample, sample_answer = self.anomaly_localisation.ML_create_dataset(leak_df.copy())
+
+            search_areas = self.anomaly_localisation.MCLP(sample=sample, grid_spacing=4000, search_radius=2000, num_SA=5)
+
+            print(search_areas)
+
+            self.visualise_with_matplotlib(mclp_results=search_areas, likelihood_cutoff=0.05)
+
+        except Exception as e:
+            logger = unexefiware.base_logger.BaseLogger()
+            logger.exception(inspect.currentframe(), e)
+            logger.log(inspect.currentframe(), epanet_sensor_name)
+
+
+    def run_leak_localisation_test(self, simulation_date:datetime.datetime, step_duration_in_min:int, leak_id:str):
         try:
             nodeIDs = self.anomaly_localisation.epanetmodel.get_node_ids(enu.NodeTypes.Junction)
-            leak_id = nodeIDs[0]
-            #leak_id = 'GJ466'
-
             print('Leak: ' + leak_id)
 
             simulationstart_date = simulation_date
@@ -655,8 +705,13 @@ class epanet_anomaly_localisation:
             # %%
             leak_df = leak_df[leak_df.ReportTime >= (leakwindow_start_date)]
             leak_df = leak_df[leak_df.ReportTime < (leakwindow_end_date)]
+
+            leak_df2 = copy.deepcopy(leak_df)
             # %%
-            sample, sample_answer = self.anomaly_localisation.ML_create_dataset(leak_df)
+            sample, sample_answer = self.anomaly_localisation.ML_create_dataset(leak_df.copy())
+
+
+
 
             coordinates = self.anomaly_localisation.epanetmodel.get_node_property(sample_answer[0], enu.JunctionProperties.Position)
             sample_answer = pd.DataFrame(sample_answer, columns=['Node_ID'], index=[0])
@@ -666,13 +721,88 @@ class epanet_anomaly_localisation:
                                                    geometry=geopandas.points_from_xy(sample_answer['Long'], sample_answer['Lat']),
                                                    crs=self.coord_system)
 
-            search_areas = self.anomaly_localisation.MCLP(sample=sample, grid_spacing=4000, search_radius=2000, num_SA=5)
+            r= 1000
+            search_areas = self.anomaly_localisation.MCLP(sample=sample, grid_spacing=r*2, search_radius=r, num_SA=5)
             #search_areas = self.anomaly_localisation.MCLP(sample=sample, grid_spacing=100*10, search_radius=500*100, num_SA=1)
 
-            self.anomaly_localisation.visualise_with_matplotlib(mclp_results=search_areas)
+            self.visualise_with_matplotlib(mclp_results=search_areas, likelihood_cutoff=0.05)
 
             print(str(search_areas))
         except Exception as e:
             logger = unexefiware.base_logger.BaseLogger()
             logger.exception(inspect.currentframe(), e)
+
+
+    def visualise_with_matplotlib(self, mclp_results:pandas.DataFrame, likelihood_cutoff:float=0, title:str=None):
+
+        fig = plt.figure(dpi=200)
+        ax = fig.add_subplot(1, 1, 1)
+
+        # do links
+        try:
+            lines = []
+            col = []
+            num_links = self.sim_inst.getcount(object=en.LINKCOUNT) + 1
+
+            for link_index in range(1, num_links):
+                link_node_indices = self.sim_inst.getlinknodes(link_index)
+
+                coords = []
+                coords.append(self.sim_inst.getcoord(link_node_indices[0]))
+
+                num_vertices = self.sim_inst.getvertexcount(link_index)
+
+                if num_vertices:
+                    for vertex in range(1, num_vertices + 1):
+                        coords.append(self.sim_inst.getvertex(link_index, vertex))
+
+                coords.append(self.sim_inst.getcoord(link_node_indices[1]))
+
+                for i in range(0, len(coords) - 1):
+                    line = [(coords[i][0], coords[i][1]), (coords[i + 1][0], coords[i + 1][1])]
+                    lines.append(line)
+                    col.append((0, 0, 1, 1))
+
+            lc = matplotlib.collections.LineCollection(lines, colors=col, linewidths=2)
+            ax.add_collection(lc)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
+
+
+        # do nodes
+        try:
+            x = []
+            y = []
+
+            num_nodes = self.sim_inst.getcount(object=en.NODECOUNT) + 1
+            for node_index in range(1, num_nodes):
+                nodeID = self.sim_inst.getnodeid(node_index)
+
+                coordinates = self.sim_inst.getcoord(node_index)
+
+                coords = list(coordinates)
+
+                #coords = self.sim_inst.transformer.transform(coords[0], coords[1])
+
+                x.append(coords[0])
+                y.append(coords[1])
+
+                ax.scatter(x, y, s=10, c=[[1, 0, 0, 1]], zorder=2)
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
+
+
+        try:
+            if isinstance(mclp_results, pandas.DataFrame):
+
+                for _, row in mclp_results.iterrows():
+                    if row['Total_Probability'] >= likelihood_cutoff:
+                        col = row['Total_Probability']
+                        ax.plot(*row['geometry'].exterior.xy, c=[col, 0, col, 1], zorder=3)
+
+        except Exception as e:
+            self.logger.exception(inspect.currentframe(), e)
+
+        plt.show()
 
