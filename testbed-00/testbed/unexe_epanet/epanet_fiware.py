@@ -89,6 +89,7 @@ class epanet_fiware(unexe_epanet.epanet_model.epanet_model):
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(),e)
+            self.logger.log(inspect.currentframe(),epanet_id)
 
     def do_node(self, fiware_wrapper, epanet_id, fiware_time):
 

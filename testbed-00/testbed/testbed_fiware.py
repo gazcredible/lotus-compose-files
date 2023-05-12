@@ -131,7 +131,7 @@ def sim_leak_management(sim: unexe_epanet.epanet_fiware, logger=None):
                     if emitter < 1:
                         # create a nice leak
                         emitter = 9999
-                        emitter = 5
+                        emitter = 5 * 1
                     else:
                         # stop a nice leak
                         emitter = 0

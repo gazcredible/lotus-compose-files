@@ -38,7 +38,7 @@ if 'DEVICE_BROKER' not in os.environ:
             os.environ['FILE_PATH'] = path
 
         os.environ['PILOTS'] = 'GUW'
-        os.environ['PILOTS'] = 'TTT'
+        #os.environ['PILOTS'] = 'TTT'
         os.environ['LOAD_LOCAL_ANOMALY_DATA'] = 'True'
         os.environ['LOAD_LOCAL_ANOMALY_DATA_PATH'] = os.environ['FILE_PATH']
 

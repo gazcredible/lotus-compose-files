@@ -23,6 +23,7 @@ import matplotlib.pyplot as plt
 import matplotlib.collections
 import epanet.toolkit as en #no function written in epanetmodel for pattern creation
 
+import math
 import warnings
 warnings.filterwarnings("ignore")
 
@@ -70,12 +71,12 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         return df
 
-    def MCLP(self, sample, grid_spacing, search_radius, num_SA):
+    def MCLP(self, sample, number_of_cells, num_SA):
         # predict probabilities for sample
         prob_df = self.ML_predict_prob(sample)
         # prob_df = prob_df[prob_df.Probability >0.0001]
         # create grid
-        grid = self.MCLP_create_grid(prob_df, grid_spacing, search_radius)
+        grid = self.MCLP_create_grid(prob_df, number_of_cells)
 
         if isinstance(grid, geopandas.GeoDataFrame):
             # solve MCLP
@@ -87,10 +88,17 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         return None
 
-    def MCLP_create_grid(self, prob_df, grid_spacing, search_radius):
+    def MCLP_create_grid(self, prob_df, number_of_cells:int=10):
         try:
             sw = shapely.geometry.Point((min(prob_df.Long_meters), min(prob_df.Lat_meters)))
             ne = shapely.geometry.Point((max(prob_df.Long_meters), max(prob_df.Lat_meters)))
+
+            x_space = math.fabs(ne.x - sw.x)
+            y_space = math.fabs(ne.y - sw.y)
+
+            grid_spacing = max(x_space,y_space)
+            grid_spacing /= number_of_cells
+            search_radius = grid_spacing/2
 
             if ne.x == sw.x:
                 ne = shapely.geometry.Point(ne.x + 2* search_radius, ne.y)
@@ -164,79 +172,6 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
         #selected_areas_df['Total_Probability'] = total_demand
         return selected_areas_df
 
-    def sim_leak_all_nodes(self,
-                           simulation_date: datetime.datetime,
-                           stepDuration: int,
-                           repeats: int,  # GARETH was 20
-                           leak_nodes=None,
-                           duration: Optional[int]=11*24*60*60,
-
-                           localizationWindow_sec: Optional[float] = 4 * 60 * 60,
-                           leakEmitter: Optional[float] = 1,
-                           sigma: Optional[float] = 0.5
-                           ):
-        nodeIDs = self.epanetmodel.get_node_ids(enu.NodeTypes.Junction)
-        leaks = []
-        if leak_nodes is None: #no leak nodes provided
-             leak_nodes = nodeIDs
-        i=0
-        for nodeID in leak_nodes:
-            print("epanet_anomaly_localisatio: node sim " + str(i) + " of "+ str(len(leak_nodes)))
-            i=i+1
-            for repeat in range(repeats):
-                try:
-                    #3 period start time
-                    # if repeat == 0 or repeat == 3:
-                    #     leakstart_day = (int(np.random.uniform(low=2, high=(11-2), size=None)))*24*60*60
-                    #     leakstart_hour = int(2*60*60)
-                    #     leakStart_sec = leakstart_day + leakstart_hour
-                    # if repeat == 1 or repeat == 4:
-                    #     leakstart_day = (int(np.random.uniform(low=2, high=(11-2), size=None)))*24*60*60
-                    #     leakstart_hour = int(14*60*60)
-                    #     leakStart_sec = leakstart_day + leakstart_hour
-                    # if repeat == 2 or repeat == 5:
-                    #     leakstart_day = (int(np.random.uniform(low=2, high=(11-2), size=None)))*24*60*60
-                    #     leakstart_hour = int(18*60*60)
-                    #     leakStart_sec = leakstart_day + leakstart_hour
-
-                    #random leak start time
-                    leakstart_day = (int(np.random.uniform(low=2, high=(11 - 2), size=None))) * 24 * 60 * 60
-                    leakstart_hour = (int(np.random.uniform(low=0, high=(23), size=None))) * (60 * 60)
-                    leakStart_sec = leakstart_day + leakstart_hour
-                    # leak parameters (start and size)
-                    leakStart_step = int(leakStart_sec / stepDuration)
-                    leakStart_date = simulation_date + datetime.timedelta(0, leakStart_step * stepDuration)
-
-                    if repeat < (repeats/2):
-                        leakEmitter = np.random.uniform(low = 1, high=4)
-                    else:
-                        leakEmitter = np.random.uniform(low = 5, high=8)
-
-                    coordinates = self.epanetmodel.get_node_property(nodeID, enu.JunctionProperties.Position)
-                    # simulate leak and create database
-                    leakDB = self.sim_leak2(duration = duration, stepDuration = stepDuration, simulation_date = simulation_date, leakID= nodeID,
-                                      leakEmitter= leakEmitter, leakStart_step = leakStart_step, sigma = sigma)
-                    leakDB['leakNode'] = nodeID
-                    leakDB['repeat'] = repeat
-                    leakDB['leakEmitter'] = leakEmitter
-                    leakDB['X-coord'] = coordinates[0]
-                    leakDB['Y-coord'] = coordinates[1]
-
-                    LeakDetectionTime_sec = np.random.uniform(low = 60*60, high=6*60*60)
-                    leakDB = leakDB[leakDB['ReportTime'] > (leakStart_date + datetime.timedelta(0,LeakDetectionTime_sec-localizationWindow_sec))]
-                    leakDB = leakDB[leakDB['ReportTime'] < (leakStart_date + datetime.timedelta(0,LeakDetectionTime_sec))]
-
-                    leaks.append(leakDB)
-                    #print("repeat "+ str(repeat) + " of" + str(repeats))
-                except Exception as e:
-                    self.logger.exception(inspect.currentframe(),e)
-                    print("error simulating leak at Junction: " +nodeID)
-
-        leakDB = pd.concat(leaks)
-        self.simulationData['train_leaks'] = leakDB
-        self.simulationData['train_leaks']['timeseries_id'] = self.simulationData['train_leaks']['leakNode'] + "_" + \
-                                                              self.simulationData['train_leaks']['repeat'].astype(str)
-
     def visualise_with_matplotlib(self, leak_coords:list=None, mclp_results:pandas.DataFrame=None, title:str=None):
         x = []
         y = []
@@ -299,7 +234,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
 
         if training_dataset == True:
             print("building leak training dataset")
-            repeats = 10 #22
+            repeats = 5
             self.sim_leak_all_nodes2(stepDuration = stepDuration,
                                     simulation_date = simulation_date,
                                     sigma = noise_sensor,
@@ -307,7 +242,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
                                     repeats=repeats)
         if testing_dataset == True:
             print("building leak testing dataset")
-            repeats = 5  # 10
+            repeats = 5
             self.sim_random_leaks2(nodes=testleaks,
                                   simulation_date = simulation_date,
                                   stepDuration=stepDuration,
@@ -400,7 +335,7 @@ class AnomalyLocalisation(anomalies.Anomaly_Localization_Class.AnomalyLocalizati
              leak_nodes = nodeIDs
         i=0
         for nodeID in leak_nodes:
-            print(nodeID + "unexe_epanet " + str(i) + " of "+ str(len(leak_nodes)))
+            print('Node ' + str(i) + " of "+ str(len(leak_nodes)) + ' ' +nodeID)
             i=i+1
             for repeat in range(repeats):
                 try:
@@ -640,7 +575,7 @@ class epanet_anomaly_localisation:
         self.anomaly_localisation.load_datafiles()
 
 
-    def localise_leak(self, epanet_sensor_name:str, leak_df:pandas.DataFrame, leakwindow_start_date:datetime.datetime,leakwindow_end_date:datetime.datetime):
+    def localise_leak(self, epanet_sensor_name:str, leak_df:pandas.DataFrame, leakwindow_start_date:datetime.datetime,leakwindow_end_date:datetime.datetime, number_of_cells:int):
 
         try:
             leakEmitter = 5
@@ -658,11 +593,11 @@ class epanet_anomaly_localisation:
             # %%
             sample, sample_answer = self.anomaly_localisation.ML_create_dataset(leak_df.copy())
 
-            search_areas = self.anomaly_localisation.MCLP(sample=sample, grid_spacing=4000, search_radius=2000, num_SA=5)
+            search_areas = self.anomaly_localisation.MCLP(sample=sample, number_of_cells=number_of_cells, num_SA=5)
 
             print(search_areas)
 
-            self.visualise_with_matplotlib(mclp_results=search_areas, likelihood_cutoff=0.05)
+            self.visualise_with_matplotlib(mclp_results=search_areas, likelihood_cutoff=0.05, title='Sensor:'+str(epanet_sensor_name))
 
         except Exception as e:
             logger = unexefiware.base_logger.BaseLogger()
@@ -796,13 +731,22 @@ class epanet_anomaly_localisation:
         try:
             if isinstance(mclp_results, pandas.DataFrame):
 
-                for _, row in mclp_results.iterrows():
+                for index, row in mclp_results.iterrows():
                     if row['Total_Probability'] >= likelihood_cutoff:
                         col = row['Total_Probability']
                         ax.plot(*row['geometry'].exterior.xy, c=[col, 0, col, 1], zorder=3)
+
+                        ax.text(self.average(row['geometry'].exterior.xy[0]),self.average(row['geometry'].exterior.xy[1]),str(index) + '\n' + str(round(row['Total_Probability'] * 100,0)))
 
         except Exception as e:
             self.logger.exception(inspect.currentframe(), e)
 
         plt.show()
+    
+    def average(self, val_list:list):
+        
+        if len(val_list) > 0:
+            return sum(val_list) / len(val_list)
+        
+        return 0
 

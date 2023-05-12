@@ -659,7 +659,7 @@ class mapview_waternetwork
                 {
                     let button_data = [];
 
-                    for (let key of Object.entries(this.water_network.stuff))
+                    for (let key of Object.entries(this.water_network.stuff).sort())
                     {
                         button_data.push({id:key[0], print_text: key[0]})
                     }

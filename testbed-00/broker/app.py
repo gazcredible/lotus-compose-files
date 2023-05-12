@@ -3,7 +3,7 @@ import platform
 
 
 if 'FILE_PATH' not in os.environ:
-    print('No environ!')
+    print('No environ!:' + 'FILE_PATH')
 
     path = '/docker/lotus.local.bench.stellio/'
 

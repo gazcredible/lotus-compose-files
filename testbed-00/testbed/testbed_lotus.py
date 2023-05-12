@@ -76,8 +76,8 @@ def testbed():
 
     # GARETH - choose epanet location here ...
     fiware_service = 'GUW'
-    fiware_service = 'AAA'
-    fiware_service = 'TTT'
+    #fiware_service = 'AAA'
+    #fiware_service = 'TTT'
 
     sensor_list = []
     start_datetime = datetime.datetime(year=2023, month=1, day=1, hour=0, minute=0, second=0)

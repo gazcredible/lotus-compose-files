@@ -93,6 +93,63 @@ def sim_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
 
             sim_inst.simulate(time_steps)
 
+
+def anomaly_localisation(sim_inst, sensor_list, number_of_cells:int):
+    al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
+    al.init(sim_inst, sensor_list)
+    al.load_datasets()
+    al.anomaly_localisation.ML_buildModel()
+
+    columns = ['ReportStep', 'ReportTime', 'Sensor_ID', 'Sensor_type', 'Read']
+
+    temporal_dataframe = pandas.DataFrame(columns)
+
+    leakwindow_end_date = sim_inst.elapsed_datetime()
+    leakwindow_start_date = leakwindow_end_date - datetime.timedelta(hours=4.25)
+
+    fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
+    fiware_wrapper.init(logger=al.logger)
+
+    deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo2(fiware_service=sim_inst.fiware_service)
+    deviceInfo.run()
+
+    devices = fiware_wrapper.get_all_type(sim_inst.fiware_service, 'Device')
+
+    if devices[0] == 200:
+        rows = []
+        for device in devices[1]:
+            epanet_ref = json.loads(device['epanet_reference']['value'])
+            temporal_result = fiware_wrapper.get_temporal(sim_inst.fiware_service, device['id'], [device['controlledProperty']['value']], unexefiware.time.datetime_to_fiware(leakwindow_start_date), unexefiware.time.datetime_to_fiware(leakwindow_end_date))
+            if temporal_result[0] == 200:
+                step = 0.0
+                for entry in temporal_result[1][device['controlledProperty']['value']]['values']:
+                    rounded_time = unexefiware.time.round_time(dt=unexefiware.time.fiware_to_datetime(entry[1]), date_delta=datetime.timedelta(minutes=15), to='up')
+
+                    week_time = rounded_time.strftime("%A-%H:%M")
+
+                    rows.append([step, unexefiware.time.fiware_to_datetime(entry[1]), epanet_ref['epanet_id'], device['controlledProperty']['value'], float(entry[0])])
+                    step += 1.0
+
+        leak_df = pandas.DataFrame(rows, columns=columns)
+
+        leak_df['Read_noise'] = leak_df['Read']
+        leak_df['timestamp'] = leak_df['ReportTime'].dt.strftime("%A-%H:%M")
+        leak_df['leakflow'] = 100
+
+        leak_df = pandas.merge(leak_df, al.anomaly_localisation.simulationData['train_noleak'][
+            ['timestamp', 'Sensor_ID', 'Read_avg', 'Read_std']], on=['timestamp', 'Sensor_ID'],
+                               how='left').drop_duplicates()
+
+        leak_df['z'] = (leak_df['Read_noise'] - leak_df['Read_avg']) / leak_df['Read_std']
+
+    for device_id in deviceInfo.deviceInfoList:
+        # test code here
+        device = deviceInfo.get_smart_model(device_id)
+
+        if device.epanomaly_isTriggered() == True:
+            al.localise_leak(device.EPANET_id(), leak_df, leakwindow_start_date, leakwindow_end_date, number_of_cells)
+
+
 def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
     quitApp = False
     while quitApp is False:
@@ -105,7 +162,8 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
         print('1..Build Anomaly Detection Data')
         print('2..Build Anomaly Localisation Data')
         print('3..Run Anomaly Localisation')
-        print('4..Localise from FIWARE anomaly data')
+        print('4..Localise from FIWARE anomaly data - Big Space')
+        print('5..Localise from FIWARE anomaly data - Small Space')
         print('X..Back')
         print('\n')
 
@@ -151,61 +209,11 @@ def anomaly_management(sim_inst:models.Aqua3S_Fiware, sensor_list:list):
 
         if key == '4':
             print('Localise from FIWARE anomaly data')
+            anomaly_localisation(sim_inst, sensor_list, number_of_cells=10)
 
-            al = unexe_epanet.epanet_anomaly_localisation.epanet_anomaly_localisation()
-            al.init(sim_inst, sensor_list)
-            al.load_datasets()
-            al.anomaly_localisation.ML_buildModel()
-
-            columns = ['ReportStep', 'ReportTime', 'Sensor_ID', 'Sensor_type', 'Read']
-
-            temporal_dataframe = pandas.DataFrame(columns)
-
-            leakwindow_end_date = sim_inst.elapsed_datetime()
-            leakwindow_start_date = leakwindow_end_date - datetime.timedelta(hours=4.25)
-
-            fiware_wrapper = unexewrapper.unexewrapper(url=os.environ['DEVICE_BROKER'])
-            fiware_wrapper.init(logger=al.logger)
-
-            deviceInfo = unexeaqua3s.deviceinfo.DeviceInfo2(fiware_service=sim_inst.fiware_service)
-            deviceInfo.run()
-
-
-            devices = fiware_wrapper.get_all_type(sim_inst.fiware_service, 'Device')
-
-            if devices[0] ==200:
-                rows = []
-                for device in devices[1]:
-                    epanet_ref = json.loads(device['epanet_reference']['value'])
-                    temporal_result = fiware_wrapper.get_temporal(sim_inst.fiware_service,device['id'], [device['controlledProperty']['value']], unexefiware.time.datetime_to_fiware(leakwindow_start_date), unexefiware.time.datetime_to_fiware(leakwindow_end_date))
-                    if temporal_result[0] == 200:
-                        step = 0.0
-                        for entry in temporal_result[1][device['controlledProperty']['value']]['values']:
-                            rounded_time = unexefiware.time.round_time(dt=unexefiware.time.fiware_to_datetime(entry[1]), date_delta=datetime.timedelta(minutes=15), to='up')
-
-                            week_time = rounded_time.strftime("%A-%H:%M")
-
-                            rows.append([step, unexefiware.time.fiware_to_datetime(entry[1]), epanet_ref['epanet_id'], device['controlledProperty']['value'], float(entry[0]) ] )
-                            step += 1.0
-
-                leak_df = pandas.DataFrame(rows, columns=columns)
-
-                leak_df['Read_noise'] = leak_df['Read']
-                leak_df['timestamp'] = leak_df['ReportTime'].dt.strftime("%A-%H:%M")
-                leak_df['leakflow'] = 0
-
-                leak_df = pandas.merge(leak_df, al.anomaly_localisation.simulationData['train_noleak'][
-                    ['timestamp', 'Sensor_ID', 'Read_avg', 'Read_std']], on=['timestamp', 'Sensor_ID'],
-                                   how='left').drop_duplicates()
-
-                leak_df['z'] = (leak_df['Read_noise'] - leak_df['Read_avg']) / leak_df['Read_std']
-
-            for device_id in deviceInfo.deviceInfoList:
-                # test code here
-                device = deviceInfo.get_smart_model(device_id)
-
-                if device.epanomaly_isTriggered() == True:
-                    al.localise_leak(device.EPANET_id(),leak_df,leakwindow_start_date, leakwindow_end_date)
+        if key == '5':
+            print('Localise from FIWARE anomaly data')
+            anomaly_localisation(sim_inst, sensor_list, number_of_cells=15)
 
 
 def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
@@ -220,12 +228,15 @@ def testbed(fiware_wrapper:unexewrapper, sim_inst:models.Aqua3S_Fiware):
         pipes = ['GP1', 'GP585', '6', 'GP269', 'GP544', '2', 'GP523', 'GP453']
         juncs = ['GJ409', 'GJ507', 'GJ533', 'GJ525','GJ258', 'GJ379', 'GJ397']
 
+        pipes = None
+        juncs = ['GJ409']
+
     if sim_inst.fiware_service == 'AAA':
         pipes = ['POZZO_3.R.M..1']
         juncs = ['POZZO_11']
 
     if sim_inst.fiware_service == 'TTT':
-        juncs = ['76','104','72','96']
+        juncs = ['76','104','72','96','RAP2']
         pipes = ['2','5','23','1']
 
     if pipes:
